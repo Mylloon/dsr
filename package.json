@@ -2,10 +2,11 @@
   "name": "dsr",
   "version": "1.0.0",
   "description": "Discord share",
-  "main": "main.js",
+  "main": "./dist/main.js",
   "scripts": {
-    "build": "npx tsc",
-    "start": "npm run build && electron ./dist/main.js"
+    "build": "rm -rf ./dist 2> /dev/null; npx tsc",
+    "start": "npm run build && electron ./dist/main.js",
+    "package": "npm run build && npx electron-packager . --platform=win32 --arch=x64"
   },
   "repository": {
     "type": "git",
@@ -20,6 +21,7 @@
     "typescript": "^5.1.6"
   },
   "devDependencies": {
-    "electron": "^25.3.2"
+    "electron": "^25.3.2",
+    "electron-packager": "^17.1.1"
   }
 }

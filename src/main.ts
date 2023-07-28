@@ -1,5 +1,7 @@
 import { app, BrowserWindow } from "electron";
 
+const pathToFfmpeg = require("ffmpeg-static");
+
 const createWindow = () => {
   const win = new BrowserWindow({
     width: 800,
@@ -10,5 +12,6 @@ const createWindow = () => {
 };
 
 app.whenReady().then(() => {
+  /* console.log(pathToFfmpeg); */
   createWindow();
 });

@@ -1,0 +1,25 @@
+{
+  "name": "dsr",
+  "version": "1.0.0",
+  "description": "Discord share",
+  "main": "main.js",
+  "scripts": {
+    "build": "npx tsc",
+    "start": "npm run build && electron ./dist/main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://git.mylloon.fr/Anri/dsr"
+  },
+  "keywords": [
+    "discord"
+  ],
+  "author": "Mylloon",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "typescript": "^5.1.6"
+  },
+  "devDependencies": {
+    "electron": "^25.3.2"
+  }
+}

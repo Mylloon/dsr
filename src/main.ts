@@ -17,6 +17,7 @@ const createWindow = () => {
 
 app.whenReady().then(() => {
   ipcMain.handle("ffmpeg", () => ffmpegPath);
+  ipcMain.handle("argv", () => process.argv);
 
   createWindow();
 

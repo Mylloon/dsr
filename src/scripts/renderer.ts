@@ -1,13 +1,11 @@
-/* Preload variables */
-var versions: any;
+/* Context bridge */
+let internals: {
+  ffmpeg: () => Promise<string>;
+};
 
-const information = document.getElementById("info");
-
-information.innerText = `Cette application utilise Chrome (v${versions.chrome()}), Node.js (v${versions.node()}), et Electron (v${versions.electron()})`;
-
-const func = async () => {
-  const response = await versions.ping();
+const get_ffmpeg = async () => {
+  const response = await internals.ffmpeg();
   console.log(response);
 };
 
-func();
+get_ffmpeg();

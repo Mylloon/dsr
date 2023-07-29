@@ -7,6 +7,6 @@
 ## Dev
 
 ```bash
-npm install --platform=win32
+npm install
 npm run package
 ```

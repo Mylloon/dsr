@@ -11,8 +11,12 @@ const createWindow = () => {
     },
   });
 
-  win.loadFile("../index.html");
+  win.loadFile(path.join(path.resolve(__dirname, ".."), "pages", "index.html"));
 };
+
+// Fix crash on Windows
+app.commandLine.appendSwitch("disable-gpu-sandbox");
+
 app.whenReady().then(() => {
   createWindow();
 

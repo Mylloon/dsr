@@ -1,6 +1,7 @@
 import { FileFilter, BrowserWindow, app, dialog, ipcMain } from "electron";
 import path = require("path");
 import ffmpegPath = require("ffmpeg-static");
+import child_process = require("child_process");
 
 /** Create a new window */
 const createWindow = () => {
@@ -31,13 +32,27 @@ const askFile = async () => {
   ).filePaths;
 };
 
+const getNewFilename = (ogFile: string, part: string) => {
+  const oldFile = path.parse(ogFile);
+  return path.join(oldFile.dir, `${part}`.concat(oldFile.base));
+};
+
+/** Merge all audios track of a video into one */
+const mergeAudio = (file: string) => {
+  const outFile = getNewFilename(file, "(merged audio) ");
+  child_process.exec(
+    `${ffmpegPath} -i "${file}" -filter_complex "[0:a]amerge=inputs=2[a]" -ac 1 -map 0:v -map "[a]" -c:v copy "${outFile}"`
+  );
+};
+
 app.whenReady().then(() => {
   /* Context bridge */
   ipcMain.handle("ffmpeg", () => ffmpegPath);
   ipcMain.handle("argv", () => process.argv);
   ipcMain.handle("allowedExtensions", () => moviesFilter);
-  ipcMain.handle("askfile", () => askFile());
-  ipcMain.handle("exit", () => app.quit());
+  ipcMain.handle("askFile", () => askFile());
+  ipcMain.handle("mergeAudio", (_, file: string) => mergeAudio(file));
+  ipcMain.handle("exit", async () => app.quit());
 
   createWindow();
 

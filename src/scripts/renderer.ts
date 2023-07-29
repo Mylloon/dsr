@@ -7,11 +7,11 @@ let internals: {
   }>;
   askFile: () => Promise<string[]>;
   exit: () => any;
+  mergeAudio: (filename: string) => Promise<void>;
 };
 
-const get_file = async () => {
+const getFile = async () => {
   const allowedExtensions = (await internals.allowedExtensions()).extensions;
-  console.log(allowedExtensions);
   const argv = await internals.argv();
   if (argv.length === 2) {
     const file = argv.pop();
@@ -27,4 +27,9 @@ const get_file = async () => {
   return file.join("");
 };
 
-get_file().then((file) => (document.getElementById("info").innerText = file));
+const main = async () => {
+  const file = await getFile();
+  document.getElementById("info").innerText = file.concat();
+  await internals.mergeAudio(file);
+};
+main();

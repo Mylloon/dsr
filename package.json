@@ -5,8 +5,8 @@
   "main": "./dist/main.js",
   "scripts": {
     "build": "rm -rf ./dist 2> /dev/null; npx tsc",
-    "start": "electron-forge start",
-    "package": "electron-forge package --platform=win32"
+    "start": "npm run build && electron-forge start",
+    "package": "npm run build && electron-forge package --platform=win32"
   },
   "repository": {
     "type": "git",

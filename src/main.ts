@@ -1,7 +1,8 @@
-import { BrowserWindow, app, ipcMain } from "electron";
+import { FileFilter, BrowserWindow, app, dialog, ipcMain } from "electron";
 import path = require("path");
 import ffmpegPath = require("ffmpeg-static");
 
+/** Create a new window */
 const createWindow = () => {
   const win = new BrowserWindow({
     width: 1280,
@@ -15,9 +16,28 @@ const createWindow = () => {
   win.webContents.openDevTools(); // debug
 };
 
+const moviesFilter = {
+  name: "Videos",
+  extensions: ["mp4", "mkv"],
+} as FileFilter;
+
+/** Ask user a file */
+const askFile = async () => {
+  return (
+    await dialog.showOpenDialog({
+      filters: [moviesFilter],
+      properties: ["openFile", "dontAddToRecent"],
+    })
+  ).filePaths;
+};
+
 app.whenReady().then(() => {
+  /* Context bridge */
   ipcMain.handle("ffmpeg", () => ffmpegPath);
   ipcMain.handle("argv", () => process.argv);
+  ipcMain.handle("allowedExtensions", () => moviesFilter);
+  ipcMain.handle("askfile", () => askFile());
+  ipcMain.handle("exit", () => app.quit());
 
   createWindow();
 

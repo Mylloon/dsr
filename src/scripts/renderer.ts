@@ -1,17 +1,30 @@
-/* Context bridge */
+/* Context bridge types */
 let internals: {
   ffmpeg: () => Promise<string>;
-  argv: () => Promise<string>;
+  argv: () => Promise<string[]>;
+  allowedExtensions: () => Promise<{
+    extensions: string[];
+  }>;
+  askFile: () => Promise<string[]>;
+  exit: () => any;
 };
 
-const get_ffmpeg = async () => {
-  const response = await internals.ffmpeg();
-  console.log(response);
-};
-get_ffmpeg();
+const get_file = async () => {
+  const allowedExtensions = (await internals.allowedExtensions()).extensions;
+  console.log(allowedExtensions);
+  const argv = await internals.argv();
+  if (argv.length === 2) {
+    const file = argv.pop();
+    if (allowedExtensions.some((ext) => file.endsWith(ext))) {
+      return file;
+    }
+  }
 
-const get_argv = async () => {
-  const response = await internals.argv();
-  console.log(response);
+  const file = await internals.askFile();
+  if (file.length === 0) {
+    await internals.exit();
+  }
+  return file.join("");
 };
-get_argv();
+
+get_file().then((file) => (document.getElementById("info").innerText = file));

@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { BrowserWindow, app, ipcMain } from "electron";
 import path = require("path");
 /* import ffmpegPath = require("ffmpeg-static"); */
 
@@ -15,6 +15,8 @@ const createWindow = () => {
 };
 
 app.whenReady().then(() => {
+  ipcMain.handle("ping", () => "pong");
+
   createWindow();
 
   app.on("activate", () => {

@@ -4,7 +4,7 @@ let internals: {
   allowedExtensions: () => Promise<{
     extensions: string[];
   }>;
-  askFile: () => Promise<string[]>;
+  askFile: () => Promise<string[] | undefined>;
   exit: () => Promise<void>;
   mergeAudio: (filename: string) => Promise<string>;
   confirmation: (text: string) => Promise<void>;
@@ -22,7 +22,7 @@ const getFile = async () => {
   }
 
   const file = await internals.askFile();
-  if (file.length === 0) {
+  if (file === undefined || file.length === 0) {
     await internals.exit();
   }
   return file.join("");

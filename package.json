@@ -19,6 +19,7 @@
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "ffmpeg-static": "^5.1.0",
+    "get-video-duration": "^4.1.0",
     "typescript": "^5.1.6"
   },
   "devDependencies": {

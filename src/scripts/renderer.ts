@@ -38,6 +38,7 @@ const main = async () => {
   const newFile = await internals.mergeAudio(file);
   let finalTitle = newFile.title;
   if (newFile.size > maxSizeDiscord) {
+    /* TODO: Since this task can take time, add a progress bar to the user */
     const targetSize = maxSizeDiscord - 2;
     finalTitle = await internals.reduceSize(
       newFile.title,

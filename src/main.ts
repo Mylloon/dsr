@@ -75,10 +75,18 @@ const reduceSize = (file: string, bitrate: number) => {
 
   const finalFile = getNewFilename(file, "Compressed - ");
 
+  /* TODO: Keep all the audio tracks */
   child_process.execSync(
     `${ffmpegPath} -y -i "${file}" -c:v libx264 -b:v ${videoBitrate}k -pass 1 -an -f null ${nul} ${and} \
      ${ffmpegPath} -y -i "${file}" -c:v libx264 -b:v ${videoBitrate}k -pass 2 -c:a aac -b:a ${audioBitrate}k "${finalFile}"`
   );
+
+  // Delete the old file
+  unlink(file, (err) => {
+    if (err) {
+      throw err;
+    }
+  });
 
   return finalFile;
 };

@@ -64,7 +64,7 @@ const mergeAudio = async (file: string) => {
 
 /* Reduce size of a file */
 const reduceSize = (file: string, bitrate: number) => {
-  const audioBitrate = 128;
+  const audioBitrate = 400; /* keep some room */
   const videoBitrate = Math.floor(bitrate) - audioBitrate;
 
   /* Trash the output, depends on the platform */
@@ -75,10 +75,9 @@ const reduceSize = (file: string, bitrate: number) => {
 
   const finalFile = getNewFilename(file, "Compressed - ");
 
-  /* TODO: Keep all the audio tracks */
   child_process.execSync(
     `${ffmpegPath} -y -i "${file}" -c:v libx264 -b:v ${videoBitrate}k -pass 1 -an -f null ${nul} ${and} \
-     ${ffmpegPath} -y -i "${file}" -c:v libx264 -b:v ${videoBitrate}k -pass 2 -c:a aac -b:a ${audioBitrate}k "${finalFile}"`
+     ${ffmpegPath} -y -i "${file}" -c:v libx264 -b:v ${videoBitrate}k -pass 2 -c:a copy -map 0:0 -map 0:1 -map 0:2 -map 0:3 "${finalFile}"`
   );
 
   // Delete the old file

@@ -32,9 +32,14 @@ const getNewFilename = (ogFile: string, part: string) => {
 /** Merge all audios track of a video into one */
 const mergeAudio = (file: string) => {
   const outFile = getNewFilename(file, "(merged audio) ");
-  child_process.exec(
+  const child = child_process.exec(
     `${ffmpegPath} -i "${file}" -filter_complex "[0:a]amerge=inputs=2[a]" -ac 1 -map 0:v -map "[a]" -c:v copy "${outFile}"`
   );
+
+  /* debug */
+  child.stderr.on("data", (err) => {
+    console.log("stderr", err.toString());
+  });
 
   return outFile;
 };

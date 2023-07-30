@@ -1,8 +1,8 @@
-import { FileFilter, BrowserWindow, app, dialog, ipcMain } from "electron";
+import { BrowserWindow, app, dialog, ipcMain } from "electron";
+import { unlink } from "fs";
 import path = require("path");
 import ffmpegPath = require("ffmpeg-static");
 import child_process = require("child_process");
-import { unlink } from "fs";
 
 /** Create a new window */
 const createWindow = () => {
@@ -23,8 +23,9 @@ const createWindow = () => {
 const moviesFilter = {
   name: "Videos",
   extensions: ["mp4", "mkv"],
-} as FileFilter;
+};
 
+/* Create a new filename from the OG one */
 const getNewFilename = (ogFile: string, part: string) => {
   const oldFile = path.parse(ogFile);
   return path.join(oldFile.dir, `${part}`.concat(oldFile.base));
@@ -55,6 +56,7 @@ const mergeAudio = (file: string) => {
   return outFile;
 };
 
+/* Ready to create the window */
 app.whenReady().then(() => {
   const win = createWindow();
 
@@ -78,16 +80,4 @@ app.whenReady().then(() => {
   ipcMain.handle("mergeAudio", (_, file: string) => mergeAudio(file));
   ipcMain.handle("exit", async () => app.quit());
   ipcMain.handle("confirmation", async (_, text: string) => confirmation(text));
-
-  app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
-  });
-});
-
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
 });

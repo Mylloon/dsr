@@ -1,15 +1,16 @@
-/* Context bridge types */
+/** Context bridge types */
 let internals: {
-  ffmpeg: () => Promise<string>;
   argv: () => Promise<string[]>;
   allowedExtensions: () => Promise<{
     extensions: string[];
   }>;
   askFile: () => Promise<string[]>;
-  exit: () => any;
-  mergeAudio: (filename: string) => Promise<void>;
+  exit: () => Promise<void>;
+  mergeAudio: (filename: string) => Promise<string>;
+  confirmation: (text: string) => Promise<void>;
 };
 
+/** Search for a file */
 const getFile = async () => {
   const allowedExtensions = (await internals.allowedExtensions()).extensions;
   const argv = await internals.argv();
@@ -27,9 +28,11 @@ const getFile = async () => {
   return file.join("");
 };
 
+/** Main function */
 const main = async () => {
   const file = await getFile();
-  document.getElementById("info").innerText = file.concat();
-  await internals.mergeAudio(file);
+  const newFile = await internals.mergeAudio(file);
+  await internals.confirmation(`File ok @ ${newFile}!`);
+  await internals.exit();
 };
 main();

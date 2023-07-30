@@ -2,6 +2,7 @@ import { FileFilter, BrowserWindow, app, dialog, ipcMain } from "electron";
 import path = require("path");
 import ffmpegPath = require("ffmpeg-static");
 import child_process = require("child_process");
+import { unlink } from "fs";
 
 /** Create a new window */
 const createWindow = () => {
@@ -31,14 +32,24 @@ const getNewFilename = (ogFile: string, part: string) => {
 
 /** Merge all audios track of a video into one */
 const mergeAudio = (file: string) => {
+  const tmp_file = getNewFilename(file, "TMP_");
   const outFile = getNewFilename(file, "(merged audio) ");
-  const child = child_process.exec(
-    `${ffmpegPath} -i "${file}" -filter_complex "[0:a]amerge=inputs=2[a]" -ac 1 -map 0:v -map "[a]" -c:v copy "${outFile}"`
+
+  // Merge 2 audio
+  child_process.execSync(
+    `${ffmpegPath} -i "${file}" -filter_complex "[0:a]amerge=inputs=2[a]" -ac 1 -map 0:v -map "[a]" -c:v copy -y "${tmp_file}"`
   );
 
-  /* debug */
-  child.stderr.on("data", (err) => {
-    console.log("stderr", err.toString());
+  // Add merged audio as first position to original video
+  child_process.execSync(
+    `${ffmpegPath} -i "${tmp_file}" -i "${file}" -map 0 -map 1:a -c:v copy -y "${outFile}"`
+  );
+
+  // Delete the temporary file
+  unlink(tmp_file, (err) => {
+    if (err) {
+      throw err;
+    }
   });
 
   return outFile;

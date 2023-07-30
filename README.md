@@ -7,6 +7,6 @@
 ## Package the app for Windows
 
 ```bash
-npm install
+npm install --platform=win32
 npm run package
 ```

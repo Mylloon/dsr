@@ -77,13 +77,10 @@ const reduceSize = (file: string, bitrate: number) => {
   /* Trash the output, depends on the platform */
   const nul = isWindows ? "NUL" : "/dev/null";
 
-  /* AND operator, depends on the platform */
-  const and = isWindows ? "^" : "&&";
-
   const finalFile = getNewFilename(file, "Compressed - ");
 
   child_process.execSync(
-    `${ffmpegPath} -y -i "${file}" -c:v libx264 -b:v ${videoBitrate}k -pass 1 -an -f null ${nul} ${and} \
+    `${ffmpegPath} -y -i "${file}" -c:v libx264 -b:v ${videoBitrate}k -pass 1 -an -f null ${nul} && \
      ${ffmpegPath} -y -i "${file}" -c:v libx264 -b:v ${videoBitrate}k -pass 2 -c:a copy -map 0:0 -map 0:1 -map 0:2 -map 0:3 "${finalFile}"`
   );
 

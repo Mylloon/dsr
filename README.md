@@ -7,6 +7,8 @@
 ## Package the app for Windows
 
 ```bash
-npm install --platform=win32
-npm run package
+npm i --platform=win32
+npm run make -- --platform=win32
 ```
+
+It will create a ZIP folder in `./out/make`.

@@ -35,13 +35,14 @@ const getNewFilename = (ogFile: string, part: string) => {
 };
 
 /** Return the duration of a video in second */
-const getVideoDuration = async (file: string) => {
-  /* TODO */
-  return 0;
+const getVideoDuration = (file: string) => {
+  const command = `${ffprobe.path} -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${file}"`;
+  const durationString = child_process.execSync(command).toString().trim();
+  return parseFloat(durationString);
 };
 
 /** Merge all audios track of a video into one */
-const mergeAudio = async (file: string) => {
+const mergeAudio = (file: string) => {
   const tmp_file = getNewFilename(file, "TMP_");
   const outFile = getNewFilename(file, "(merged audio) ");
 
@@ -62,7 +63,7 @@ const mergeAudio = async (file: string) => {
     }
   });
 
-  const duration = await getVideoDuration(outFile);
+  const duration = getVideoDuration(outFile);
   const stats = statSync(outFile);
 
   return { title: outFile, size: stats.size / 1024 / 1024, duration };

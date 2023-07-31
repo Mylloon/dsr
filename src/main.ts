@@ -2,8 +2,8 @@ import { BrowserWindow, app, dialog, ipcMain } from "electron";
 import { unlink, statSync } from "fs";
 import path = require("path");
 import ffmpegPath = require("ffmpeg-static");
+import ffprobe = require("ffprobe-static");
 import child_process = require("child_process");
-import { getVideoDurationInSeconds } from "get-video-duration";
 
 const moviesFilter = {
   name: "Videos",
@@ -34,6 +34,12 @@ const getNewFilename = (ogFile: string, part: string) => {
   return path.join(oldFile.dir, `${part}`.concat(oldFile.base));
 };
 
+/** Return the duration of a video in second */
+const getVideoDuration = async (file: string) => {
+  /* TODO */
+  return 0;
+};
+
 /** Merge all audios track of a video into one */
 const mergeAudio = async (file: string) => {
   const tmp_file = getNewFilename(file, "TMP_");
@@ -56,7 +62,7 @@ const mergeAudio = async (file: string) => {
     }
   });
 
-  const duration = await getVideoDurationInSeconds(outFile);
+  const duration = await getVideoDuration(outFile);
   const stats = statSync(outFile);
 
   return { title: outFile, size: stats.size / 1024 / 1024, duration };

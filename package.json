@@ -1,7 +1,7 @@
 {
   "name": "dsr",
-  "version": "1.0.0",
-  "description": "Discord share",
+  "version": "1.1.0",
+  "description": "Discord Video Sharing",
   "main": "./dist/main.js",
   "scripts": {
     "build": "rm -rf ./dist 2> /dev/null; npx tsc",

@@ -70,7 +70,7 @@ app.whenReady().then(() => {
       }
     });
 
-    const duration = await getVideoDuration(outFile);
+    const duration = getVideoDuration(outFile);
     const stats = statSync(outFile);
 
     return { title: outFile, size: stats.size / 1024 / 1024, duration };

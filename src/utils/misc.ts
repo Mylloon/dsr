@@ -10,11 +10,9 @@ export const getNewFilename = (ogFile: string, part: string) => {
 };
 
 /** Return the duration of a video in second */
-export const getVideoDuration = async (file: string) => {
+export const getVideoDuration = (file: string) => {
   const command = `"${ffprobe.path}" -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${file}"`;
-  const durationString = await execute(command).then((output) =>
-    output.toString().trim()
-  );
+  const durationString = child_process.execSync(command).toString().trim();
   return parseFloat(durationString);
 };
 

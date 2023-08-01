@@ -36,7 +36,7 @@ app.whenReady().then(() => {
   const win = createWindow();
 
   /** Ask user a file */
-  const askFile = async () => {
+  const askFile = () => {
     return dialog.showOpenDialogSync(win, {
       filters: [moviesFilter],
       properties: ["openFile", "dontAddToRecent"],
@@ -45,7 +45,7 @@ app.whenReady().then(() => {
 
   /** Send confirmation to user */
   const confirmation = async (message: string) => {
-    dialog.showMessageBoxSync(win, { message });
+    await dialog.showMessageBox(win, { message });
   };
 
   /** Merge all audios track of a video into one */
@@ -109,6 +109,6 @@ app.whenReady().then(() => {
   ipcMain.handle("reduceSize", (_, file: string, bitrate: number) =>
     reduceSize(file, bitrate)
   );
-  ipcMain.handle("exit", async () => app.quit());
-  ipcMain.handle("confirmation", async (_, text: string) => confirmation(text));
+  ipcMain.handle("exit", () => app.quit());
+  ipcMain.handle("confirmation", (_, text: string) => confirmation(text));
 });

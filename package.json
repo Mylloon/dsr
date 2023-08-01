@@ -30,7 +30,9 @@
   },
   "config": {
     "forge": {
-      "packagerConfig": {},
+      "packagerConfig": {
+        "icon": "./image/icon.ico"
+      },
       "makers": [
         {
           "name": "@electron-forge/maker-zip",

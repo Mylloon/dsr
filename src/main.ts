@@ -17,9 +17,10 @@ const moviesFilter = {
 /** Create a new window */
 const createWindow = () => {
   const win = new BrowserWindow({
-    width: 1280,
-    height: 720,
+    width: 600,
+    height: 340,
     icon: "./image/icon.ico",
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },

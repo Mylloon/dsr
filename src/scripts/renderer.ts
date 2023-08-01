@@ -31,13 +31,18 @@ const getFile = async () => {
   return file.join("");
 };
 
+/** Either replace the message, or add some info */
 enum Mode {
   Write,
   Append,
 }
 
 /** Update the message to the user */
-const updateMessage = (message: string, mode: Mode = Mode.Write) => {
+const updateMessage = (
+  message: string,
+  load: boolean = false,
+  mode: Mode = Mode.Write
+) => {
   switch (mode) {
     case Mode.Write:
       document.getElementById("message").innerText = message;
@@ -50,6 +55,9 @@ const updateMessage = (message: string, mode: Mode = Mode.Write) => {
     default:
       break;
   }
+  document.getElementById("load").style.visibility = load
+    ? "visible"
+    : "hidden";
 };
 
 /** Main function */
@@ -57,18 +65,19 @@ const main = async () => {
   const maxSizeDiscord = 25;
   updateMessage("Récupération du fichier...");
   const file = await getFile();
-  updateMessage("Mélange des pistes audios vers la piste 1...");
+  updateMessage("Mélange des pistes audios vers la piste 1...", true);
   const newFile = await internals.mergeAudio(file);
   let finalTitle = newFile.title;
   updateMessage(`Taille calculée : ~${Math.round(newFile.size)}Mio`);
   if (newFile.size > maxSizeDiscord) {
-    const targetSize = maxSizeDiscord - 2;
+    const targetSize = maxSizeDiscord - 2; // keep some room
 
     // https://trac.ffmpeg.org/wiki/Encode/H.264#twopass
     const bitrate = Math.floor((targetSize * 8388.608) / newFile.duration);
 
     updateMessage(
       `\nFichier trop lourd, compression en cours... (bitrate total = ${bitrate}kbps)`,
+      true,
       Mode.Append
     );
     finalTitle = await internals.reduceSize(

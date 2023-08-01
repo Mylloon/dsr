@@ -1,6 +1,8 @@
 import { BrowserWindow, app, dialog, ipcMain } from "electron";
-import { statSync, unlink } from "fs";
+import { statSync } from "fs";
 import {
+  deleteFile,
+  deleteTwoPassFiles,
   execute,
   getNewFilename,
   getVideoDuration,
@@ -63,12 +65,8 @@ app.whenReady().then(() => {
       `"${ffmpegPath}" -y -i "${tmpFile}" -i "${file}" -map 0 -map 1:a -c:v copy "${outFile}"`
     ).catch((e) => printAndDevTool(win, e));
 
-    // Delete the temporary file
-    unlink(tmpFile, (err) => {
-      if (err) {
-        throw err;
-      }
-    });
+    // Delete the temporary video file
+    deleteFile(tmpFile);
 
     const duration = getVideoDuration(outFile);
     const stats = statSync(outFile);
@@ -91,12 +89,11 @@ app.whenReady().then(() => {
      "${ffmpegPath}" -y -i "${file}" -c:v libx264 -b:v ${videoBitrate}k -pass 2 -c:a copy -map 0:0 -map 0:1 -map 0:2 -map 0:3 -f mp4 "${finalFile}"`
     ).catch((e) => printAndDevTool(win, e));
 
-    // Delete the old file
-    unlink(file, (err) => {
-      if (err) {
-        throw err;
-      }
-    });
+    // Delete the old video file
+    deleteFile(file);
+
+    // Delete the 2 pass temporary files
+    deleteTwoPassFiles(file);
 
     return finalFile;
   };

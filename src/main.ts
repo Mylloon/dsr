@@ -1,16 +1,13 @@
 import { BrowserWindow, app, dialog, ipcMain } from "electron";
 import { statSync, unlink } from "fs";
-import { getNewFilename, getVideoDuration } from "./utils/misc";
+import { execute, getNewFilename, getVideoDuration } from "./utils/misc";
 import path = require("path");
 import ffmpegPath = require("ffmpeg-static");
-import child_process = require("child_process");
 
 const moviesFilter = {
   name: "Videos",
   extensions: ["mp4", "mkv"],
 };
-
-const isWindows = process.platform === "win32";
 
 /** Create a new window */
 const createWindow = () => {
@@ -29,22 +26,22 @@ const createWindow = () => {
 };
 
 /** Merge all audios track of a video into one */
-const mergeAudio = (file: string) => {
-  const tmp_file = getNewFilename(file, "TMP_");
+const mergeAudio = async (file: string) => {
+  const tmpFile = getNewFilename(file, "TMP_");
   const outFile = getNewFilename(file, "(merged audio) ");
 
   // Merge 2 audio
-  child_process.execSync(
-    `${ffmpegPath} -y -i "${file}" -filter_complex "[0:a]amerge=inputs=2[a]" -ac 1 -map 0:v -map "[a]" -c:v copy "${tmp_file}"`
+  await execute(
+    `${ffmpegPath} -y -i "${file}" -filter_complex "[0:a]amerge=inputs=2[a]" -ac 1 -map 0:v -map "[a]" -c:v copy "${tmpFile}"`
   );
 
   // Add merged audio as first position to original video
-  child_process.execSync(
-    `${ffmpegPath} -y -i "${tmp_file}" -i "${file}" -map 0 -map 1:a -c:v copy "${outFile}"`
+  await execute(
+    `${ffmpegPath} -y -i "${tmpFile}" -i "${file}" -map 0 -map 1:a -c:v copy "${outFile}"`
   );
 
   // Delete the temporary file
-  unlink(tmp_file, (err) => {
+  unlink(tmpFile, (err) => {
     if (err) {
       throw err;
     }
@@ -57,16 +54,16 @@ const mergeAudio = (file: string) => {
 };
 
 /* Reduce size of a file */
-const reduceSize = (file: string, bitrate: number) => {
-  const audioBitrate = 400; /* keep some room */
-  const videoBitrate = Math.floor(bitrate) - audioBitrate;
-
-  /* Trash the output, depends on the platform */
-  const nul = isWindows ? "NUL" : "/dev/null";
+const reduceSize = async (file: string, bitrate: number) => {
+  const audioBitrate = 400; // keep some room
+  const videoBitrate = bitrate - audioBitrate;
 
   const finalFile = getNewFilename(file, "Compressed - ");
 
-  child_process.execSync(
+  // Trash the output, depends on the platform
+  const nul = process.platform === "win32" ? "NUL" : "/dev/null";
+
+  await execute(
     `${ffmpegPath} -y -i "${file}" -c:v libx264 -b:v ${videoBitrate}k -pass 1 -an -f mp4 ${nul} && \
      ${ffmpegPath} -y -i "${file}" -c:v libx264 -b:v ${videoBitrate}k -pass 2 -c:a copy -map 0:0 -map 0:1 -map 0:2 -map 0:3 -f mp4 "${finalFile}"`
   );

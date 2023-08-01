@@ -60,7 +60,7 @@ const main = async () => {
   updateMessage("Mélange des pistes audios vers la piste 1...");
   const newFile = await internals.mergeAudio(file);
   let finalTitle = newFile.title;
-  updateMessage(`Taille calculée : ${Math.round(newFile.size)}Mo`);
+  updateMessage(`Taille calculée : ${Math.round(newFile.size)}Mio`);
   if (newFile.size > maxSizeDiscord) {
     const targetSize = maxSizeDiscord - 2;
 

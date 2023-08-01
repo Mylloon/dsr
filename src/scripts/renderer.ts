@@ -60,7 +60,7 @@ const main = async () => {
   updateMessage("Mélange des pistes audios vers la piste 1...");
   const newFile = await internals.mergeAudio(file);
   let finalTitle = newFile.title;
-  updateMessage(`Taille calculée : ${Math.round(newFile.size)}Mio`);
+  updateMessage(`Taille calculée : ~${Math.round(newFile.size)}Mio`);
   if (newFile.size > maxSizeDiscord) {
     const targetSize = maxSizeDiscord - 2;
 
@@ -68,7 +68,7 @@ const main = async () => {
     const bitrate = Math.floor((targetSize * 8388.608) / newFile.duration);
 
     updateMessage(
-      `\nFichier trop lourd, compression en cours... (bitrate total = ${bitrate})`,
+      `\nFichier trop lourd, compression en cours... (bitrate total = ${bitrate}kbps)`,
       Mode.Append
     );
     finalTitle = await internals.reduceSize(

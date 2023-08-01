@@ -1,8 +1,8 @@
 import { BrowserWindow, app, dialog, ipcMain } from "electron";
-import { unlink, statSync } from "fs";
+import { statSync, unlink } from "fs";
+import { getNewFilename, getVideoDuration } from "./utils/misc";
 import path = require("path");
 import ffmpegPath = require("ffmpeg-static");
-import ffprobe = require("ffprobe-static");
 import child_process = require("child_process");
 
 const moviesFilter = {
@@ -26,19 +26,6 @@ const createWindow = () => {
   win.webContents.openDevTools(); // debug
 
   return win;
-};
-
-/* Create a new filename from the OG one */
-const getNewFilename = (ogFile: string, part: string) => {
-  const oldFile = path.parse(ogFile);
-  return path.join(oldFile.dir, `${part}`.concat(oldFile.base));
-};
-
-/** Return the duration of a video in second */
-const getVideoDuration = (file: string) => {
-  const command = `${ffprobe.path} -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${file}"`;
-  const durationString = child_process.execSync(command).toString().trim();
-  return parseFloat(durationString);
 };
 
 /** Merge all audios track of a video into one */

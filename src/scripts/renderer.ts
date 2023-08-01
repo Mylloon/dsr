@@ -80,11 +80,7 @@ const main = async () => {
       true,
       Mode.Append
     );
-    finalTitle = await internals.reduceSize(
-      newFile.title,
-
-      bitrate
-    );
+    finalTitle = await internals.reduceSize(newFile.title, bitrate);
   }
   updateMessage("Fichier prêt ! :)");
   await internals.confirmation(`File ok @ ${finalTitle}!`);

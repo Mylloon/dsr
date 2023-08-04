@@ -56,8 +56,9 @@ app.whenReady().then(() => {
     const outFile = getNewFilename(file, "(merged audio) ");
 
     // Merge 2 audio
+    // See: https://trac.ffmpeg.org/wiki/AudioChannelManipulation#a2stereostereo
     await execute(
-      `"${ffmpegPath}" -y -i "${file}" -filter_complex "[0:a]amerge=inputs=2[a]" -ac 1 -map 0:v -map "[a]" -c:v copy "${tmpFile}"`
+      `"${ffmpegPath}" -y -i "${file}" -filter_complex "[0:a]amerge=inputs=2[a]" -ac 2 -map 0:v -map "[a]" -c:v copy "${tmpFile}"`
     ).catch((e) => printAndDevTool(win, e));
 
     // Add merged audio as first position to original video and make it default

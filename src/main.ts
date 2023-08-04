@@ -60,9 +60,10 @@ app.whenReady().then(() => {
       `"${ffmpegPath}" -y -i "${file}" -filter_complex "[0:a]amerge=inputs=2[a]" -ac 1 -map 0:v -map "[a]" -c:v copy "${tmpFile}"`
     ).catch((e) => printAndDevTool(win, e));
 
-    // Add merged audio as first position to original video
+    // Add merged audio as first position to original video and make it default
+    // About disposition: https://ffmpeg.org/ffmpeg.html#Main-options
     await execute(
-      `"${ffmpegPath}" -y -i "${tmpFile}" -i "${file}" -map 0 -map 1:a -c:v copy "${outFile}"`
+      `"${ffmpegPath}" -y -i "${tmpFile}" -i "${file}" -map 0 -map 1:a -c:v copy -disposition:a 0 -disposition:a:0 default "${outFile}"`
     ).catch((e) => printAndDevTool(win, e));
 
     // Delete the temporary video file

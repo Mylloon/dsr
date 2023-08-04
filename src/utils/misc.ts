@@ -18,9 +18,9 @@ export const getVideoDuration = (file: string) => {
 };
 
 /** Print an error to the console and open the dev tool panel */
-export const printAndDevTool = (win: BrowserWindow, error: string) => {
-  console.error(error);
+export const printAndDevTool = (win: BrowserWindow, err: string) => {
   win.webContents.openDevTools();
+  win.webContents.send("error", err);
 };
 
 /** Run a command asynchronously */

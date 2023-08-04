@@ -1,5 +1,10 @@
 import { contextBridge, ipcRenderer } from "electron";
 
+/* Log errors */
+ipcRenderer.on("error", (_, err) => {
+  console.error(err);
+});
+
 /* Context bridge */
 contextBridge.exposeInMainWorld("internals", {
   argv: () => ipcRenderer.invoke("argv"),

@@ -24,7 +24,9 @@ export const printAndDevTool = (win: BrowserWindow, error: string) => {
 };
 
 /** Run a command asynchronously */
-export const execute = (command: string) => {
+export const execute = (
+  command: string
+): Promise<{ stdout: string; stderr: string }> => {
   return new Promise((resolve, reject) => {
     child_process.exec(command, (error, stdout, stderr) => {
       if (error) {

@@ -67,11 +67,15 @@ app.whenReady().then(() => {
 
     // Add merged audio as first position to original video and make it default
     // About disposition: https://ffmpeg.org/ffmpeg.html#Main-options
+    // Also rename all tracks accordingly to what they are
     await execute(
       `"${ffmpegPath}" -y \
       -i "${tmpFile}" -i "${file}" \
       -map 0 -map 1:a -c:v copy \
       -disposition:a 0 -disposition:a:0 default \
+      -metadata:s:a:0 title="System sounds and microphone" \
+      -metadata:s:a:1 title="System sounds" \
+      -metadata:s:a:2 title="Microphone" \
       "${outFile}"`
     ).catch((e) => printAndDevTool(win, e));
 
@@ -94,13 +98,16 @@ app.whenReady().then(() => {
     // Trash the output, depends on the platform
     const nul = process.platform === "win32" ? "NUL" : "/dev/null";
 
+    // TODO: Keep metadata of tracks
     await execute(
       `"${ffmpegPath}" -y \
-      -i "${file}" -c:v libx264 -b:v ${videoBitrate}k -pass 1 -an -f mp4 \
+      -i "${file}" \
+      -c:v libx264 -b:v ${videoBitrate}k -pass 1 -an -f mp4 \
       ${nul} \
       && \
       "${ffmpegPath}" -y \
-      -i "${file}" -c:v libx264 -b:v ${videoBitrate}k -pass 2 -c:a copy \
+      -i "${file}" \
+      -c:v libx264 -b:v ${videoBitrate}k -pass 2 -c:a copy \
       -map 0:0 -map 0:1 -map 0:2 -map 0:3 -f mp4 \
       "${finalFile}"`
     ).catch((e) => printAndDevTool(win, e));

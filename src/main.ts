@@ -16,6 +16,10 @@ const moviesFilter = {
   extensions: ["mp4", "mkv"],
 };
 
+const metadataAudio = `-metadata:s:a:0 title="System sounds and microphone" \
+                       -metadata:s:a:1 title="System sounds" \
+                       -metadata:s:a:2 title="Microphone"`;
+
 /** Create a new window */
 const createWindow = () => {
   const win = new BrowserWindow({
@@ -73,9 +77,7 @@ app.whenReady().then(() => {
       -i "${tmpFile}" -i "${file}" \
       -map 0 -map 1:a -c:v copy \
       -disposition:a 0 -disposition:a:0 default \
-      -metadata:s:a:0 title="System sounds and microphone" \
-      -metadata:s:a:1 title="System sounds" \
-      -metadata:s:a:2 title="Microphone" \
+      ${metadataAudio} \
       "${outFile}"`
     ).catch((e) => printAndDevTool(win, e));
 
@@ -109,6 +111,7 @@ app.whenReady().then(() => {
       -i "${file}" \
       -c:v libx264 -b:v ${videoBitrate}k -pass 2 -c:a copy \
       -map 0:0 -map 0:1 -map 0:2 -map 0:3 -f mp4 \
+      ${metadataAudio} \
       "${finalFile}"`
     ).catch((e) => printAndDevTool(win, e));
 

@@ -18,15 +18,15 @@
   "author": "Mylloon",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@electron-forge/maker-zip": "^6.2.1",
-    "ffmpeg-static": "^5.1.0",
-    "ffprobe-static": "^3.1.0",
-    "typescript": "^5.1.6"
+    "@electron-forge/maker-zip": "^6.4",
+    "ffmpeg-static": "^5.2",
+    "ffprobe-static": "^3.1",
+    "typescript": "^5.1"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^6.2.1",
-    "@types/ffprobe-static": "^2.0.1",
-    "electron": "^25.3.2"
+    "@electron-forge/cli": "^6.4",
+    "@types/ffprobe-static": "^2.0",
+    "electron": "^26.1"
   },
   "config": {
     "forge": {

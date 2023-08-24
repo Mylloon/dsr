@@ -41,11 +41,11 @@ const createWindow = () => {
 app.whenReady().then(() => {
   const win = createWindow();
 
-  /** Ask user a file */
-  const askFile = () => {
+  /** Ask user files */
+  const askFiles = () => {
     return dialog.showOpenDialogSync(win, {
       filters: [moviesFilter],
-      properties: ["openFile", "dontAddToRecent"],
+      properties: ["openFile", "dontAddToRecent", "multiSelections"],
     });
   };
 
@@ -53,6 +53,9 @@ app.whenReady().then(() => {
   const confirmation = async (message: string) => {
     await dialog.showMessageBox(win, { message });
   };
+
+  /** Get filename of a path */
+  const getFilename = (filepath: string) => path.parse(filepath).base;
 
   /** Merge all audios track of a video into one */
   const mergeAudio = async (file: string) => {
@@ -128,7 +131,8 @@ app.whenReady().then(() => {
   /* Context bridge */
   ipcMain.handle("argv", () => process.argv);
   ipcMain.handle("allowedExtensions", () => moviesFilter);
-  ipcMain.handle("askFile", () => askFile());
+  ipcMain.handle("getFilename", (_, filepath: string) => getFilename(filepath));
+  ipcMain.handle("askFiles", () => askFiles());
   ipcMain.handle("mergeAudio", (_, file: string) => mergeAudio(file));
   ipcMain.handle("reduceSize", (_, file: string, bitrate: number) =>
     reduceSize(file, bitrate)

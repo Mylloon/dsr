@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "module": "commonjs",
+    "downlevelIteration": true,
     "noImplicitAny": true,
     "sourceMap": true,
     "outDir": "dist",

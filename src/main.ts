@@ -63,10 +63,10 @@ app.whenReady().then(() => {
     // See: https://trac.ffmpeg.org/wiki/AudioChannelManipulation#a2stereostereo
     await execute(
       `"${ffmpegPath}" -y \
-      -i "${file}" \
-      -filter_complex "[0:a]amerge=inputs=2[a]" -ac 2 -map 0:v -map "[a]" \
-      -c:v copy \
-      "${tmpFile}"`
+       -i "${file}" \
+       -filter_complex "[0:a]amerge=inputs=2[a]" -ac 2 -map 0:v -map "[a]" \
+       -c:v copy \
+       "${tmpFile}"`
     ).catch((e) => printAndDevTool(win, e));
 
     // Add merged audio as first position to original video and make it default
@@ -74,11 +74,11 @@ app.whenReady().then(() => {
     // Also rename all tracks accordingly to what they are
     await execute(
       `"${ffmpegPath}" -y \
-      -i "${tmpFile}" -i "${file}" \
-      -map 0 -map 1:a -c:v copy \
-      -disposition:a 0 -disposition:a:0 default \
-      ${metadataAudio} \
-      "${outFile}"`
+       -i "${tmpFile}" -i "${file}" \
+       -map 0 -map 1:a -c:v copy \
+       -disposition:a 0 -disposition:a:0 default \
+       ${metadataAudio} \
+       "${outFile}"`
     ).catch((e) => printAndDevTool(win, e));
 
     // Delete the temporary video file
@@ -104,16 +104,16 @@ app.whenReady().then(() => {
     // Add metadata to audio's track
     await execute(
       `"${ffmpegPath}" -y \
-      -i "${file}" \
-      -c:v libx264 -b:v ${videoBitrate}k -pass 1 -an -f mp4 \
-      ${nul} \
-      && \
-      "${ffmpegPath}" -y \
-      -i "${file}" \
-      -c:v libx264 -b:v ${videoBitrate}k -pass 2 -c:a copy \
-      -map 0:0 -map 0:1 -map 0:2 -map 0:3 -f mp4 \
-      ${metadataAudio} \
-      "${finalFile}"`
+       -i "${file}" \
+       -c:v libx264 -b:v ${videoBitrate}k -pass 1 -an -f mp4 \
+       ${nul} \
+       && \
+       "${ffmpegPath}" -y \
+       -i "${file}" \
+       -c:v libx264 -b:v ${videoBitrate}k -pass 2 -c:a copy \
+       -map 0:0 -map 0:1 -map 0:2 -map 0:3 -f mp4 \
+       ${metadataAudio} \
+       "${finalFile}"`
     ).catch((e) => printAndDevTool(win, e));
 
     // Delete the old video file

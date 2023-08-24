@@ -100,7 +100,8 @@ app.whenReady().then(() => {
     // Trash the output, depends on the platform
     const nul = process.platform === "win32" ? "NUL" : "/dev/null";
 
-    // TODO: Keep metadata of tracks
+    // Compress the video
+    // Add metadata to audio's track
     await execute(
       `"${ffmpegPath}" -y \
       -i "${file}" \

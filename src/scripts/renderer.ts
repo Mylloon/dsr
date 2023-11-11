@@ -17,9 +17,12 @@ let internals: {
 /** Search for files */
 const getFiles = async () => {
   const allowedExtensions = (await internals.allowedExtensions()).extensions;
-  const argv = await internals.argv();
-  if (argv.length >= 2) {
-    const files = argv.slice(1);
+  const argvFiles = (await internals.argv())
+    .slice(1)
+    .filter((element) => !element.startsWith("/"));
+
+  if (argvFiles.length > 0) {
+    const files = argvFiles;
 
     // Exit if a file isn't supported in the list
     if (
@@ -38,6 +41,18 @@ const getFiles = async () => {
     await internals.exit();
   }
   return files;
+};
+
+/** Returns maximum allowed size for files in MB */
+const fetchMaxSize = async () => {
+  const argv = await internals.argv();
+  if (argv.includes("/nitro")) {
+    // Nitro user
+    return 500;
+  }
+
+  // Free user
+  return 25;
 };
 
 /** Either replace the message, or add some info */
@@ -71,7 +86,7 @@ const updateMessage = (
 
 /** Main function */
 const main = async () => {
-  const maxSizeDiscord = 25;
+  const maxSizeDiscord = await fetchMaxSize();
   updateMessage("Récupération des fichiers...");
   const files = await getFiles();
   let processedFiles = "";

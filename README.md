@@ -12,6 +12,7 @@ Head to [the release page](https://git.mylloon.fr/Anri/dsr/releases/latest).
   - [x] Support drag&drop
 - [x] Keep the video under 25mb (discord limitation)
   - [x] If already under the limit, the file won't be compressed
+  - [x] Nitro suppport via `/nitro` flag
 - [x] Merge all audio files into one track, while keeping the original ones (keeping track's title too)
 - [x] Support multiples files
 

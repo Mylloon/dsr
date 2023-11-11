@@ -12,14 +12,13 @@ Helper for sharing video captured by NVidia Shadowplay in Discord.
 
   Copy and paste this snippet into the windows command prompt:
 
-  ```bash
+  ```batch
   PowerShell -Command "" ^
     "$releases = 'https://git.mylloon.fr/api/v1/repos/Anri/dsr/releases/latest';" ^
     "$link = (Invoke-WebRequest $releases | ConvertFrom-Json)[0].assets.browser_download_url;" ^
-    "$archive = 'dsr.zip';" ^
-    "$outfile = Join-Path -Path $env:TEMP -ChildPath $archive;" ^
-    "Invoke-WebRequest -Uri $link -OutFile $outfile;" ^
-    "cd $env:TEMP;" ^
+    "$archive = '%TEMP%\dsr.zip';" ^
+    "Invoke-WebRequest -Uri $link -OutFile $archive;" ^
+    "Remove-Item '%LOCALAPPDATA%\DSR' -Recurse -ErrorAction SilentlyContinue;" ^
     "Expand-Archive -Path $archive -DestinationPath '%LOCALAPPDATA%\DSR' -Force;" ^
     "Move-Item -Path '%LOCALAPPDATA%\DSR\dsr-win32-x64\*' -Destination '%LOCALAPPDATA%\DSR' -Force;" ^
     "Remove-Item '%LOCALAPPDATA%\DSR\dsr-win32-x64';" ^

@@ -22,7 +22,7 @@ Helper for sharing video captured by NVidia Shadowplay in Discord.
     "cd $env:TEMP;" ^
     "Expand-Archive -Path $archive -DestinationPath '%LOCALAPPDATA%\DSR' -Force;" ^
     "Move-Item -Path '%LOCALAPPDATA%\DSR\dsr-win32-x64\*' -Destination '%LOCALAPPDATA%\DSR' -Force;" ^
-    "Remove-Item '%LOCALAPPDATA%\DSR\dsr-win32-x64';'" ^
+    "Remove-Item '%LOCALAPPDATA%\DSR\dsr-win32-x64';" ^
     "$WshShell = New-Object -comObject WScript.Shell;" ^
     "$Shortcut = $WshShell.CreateShortcut('%APPDATA%\Microsoft\Windows\Start Menu\Programs\DSR.lnk');" ^
     "$Shortcut.TargetPath = '%LOCALAPPDATA%\DSR\dsr.exe';" ^

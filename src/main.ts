@@ -66,6 +66,9 @@ app.whenReady().then(() => {
     const tmpFile = getNewFilename(file, "TMP_");
     let outFile;
 
+    // One track for the video
+    let nbTracks = 1;
+
     // Merge 2 audio
     // See: https://trac.ffmpeg.org/wiki/AudioChannelManipulation#a2stereostereo
     await execute(
@@ -83,6 +86,7 @@ app.whenReady().then(() => {
         ) {
           // Only one audio in the file
           outFile = getNewFilename(file, "(processed) ");
+          nbTracks += 1;
 
           // Do a copy
           await execute(`${copy} "${file}" "${outFile}" ${copyArg}`).catch(
@@ -102,6 +106,7 @@ app.whenReady().then(() => {
         }
 
         outFile = getNewFilename(file, "(merged audio) ");
+        nbTracks += 3;
         // Add merged audio as first position to original video and make it default
         // About disposition: https://ffmpeg.org/ffmpeg.html#Main-options
         // Also rename all tracks accordingly to what they are
@@ -121,11 +126,20 @@ app.whenReady().then(() => {
     const duration = getVideoDuration(outFile);
     const stats = statSync(outFile);
 
-    return { title: outFile, size: stats.size / 1024 / 1024, duration };
+    return {
+      title: outFile,
+      size: stats.size / 1024 / 1024,
+      duration,
+      nbTracks,
+    };
   };
 
   /* Reduce size of a file */
-  const reduceSize = async (file: string, bitrate: number) => {
+  const reduceSize = async (
+    file: string,
+    bitrate: number,
+    nbTracks: number
+  ) => {
     const audioBitrate = 400; // keep some room
     const videoBitrate = bitrate - audioBitrate;
 
@@ -133,6 +147,14 @@ app.whenReady().then(() => {
 
     // Trash the output, depends on the platform
     const nul = process.platform === "win32" ? "NUL" : "/dev/null";
+
+    // Mapping of tracks for FFMPEG
+    const mappingTracks = Array(nbTracks)
+      .fill("-map 0:")
+      .map(function (str, index) {
+        return str + index;
+      })
+      .join(" ");
 
     // Compress the video
     // Add metadata to audio's track
@@ -145,7 +167,7 @@ app.whenReady().then(() => {
        "${ffmpegPath}" -y \
        -i "${file}" \
        -c:v libx264 -b:v ${videoBitrate}k -pass 2 -c:a copy \
-       -map 0:0 -map 0:1 -map 0:2 -map 0:3 -f mp4 \
+       ${mappingTracks} -f mp4 \
        ${metadataAudio} \
        "${finalFile}"`
     ).catch((e) => printAndDevTool(win, e));
@@ -165,8 +187,10 @@ app.whenReady().then(() => {
   ipcMain.handle("getFilename", (_, filepath: string) => getFilename(filepath));
   ipcMain.handle("askFiles", () => askFiles());
   ipcMain.handle("mergeAudio", (_, file: string) => mergeAudio(file));
-  ipcMain.handle("reduceSize", (_, file: string, bitrate: number) =>
-    reduceSize(file, bitrate)
+  ipcMain.handle(
+    "reduceSize",
+    (_, file: string, bitrate: number, nbTracks: number) =>
+      reduceSize(file, bitrate, nbTracks)
   );
   ipcMain.handle("exit", () => app.quit());
   ipcMain.handle("confirmation", (_, text: string) => confirmation(text));

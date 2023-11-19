@@ -7,10 +7,17 @@ let internals: {
   getFilename: (filepath: string) => Promise<string>;
   askFiles: () => Promise<string[] | undefined>;
   exit: () => Promise<void>;
-  mergeAudio: (
-    filename: string
-  ) => Promise<{ title: string; duration: number; size: number }>;
-  reduceSize: (file: string, bitrate: number) => Promise<string>;
+  mergeAudio: (filename: string) => Promise<{
+    title: string;
+    duration: number;
+    size: number;
+    nbTracks: number;
+  }>;
+  reduceSize: (
+    file: string,
+    bitrate: number,
+    nbTracks: number
+  ) => Promise<string>;
   confirmation: (text: string) => Promise<void>;
 };
 
@@ -119,7 +126,11 @@ const main = async () => {
       );
 
       // Compress the video and change the title to the new one
-      finalTitle = await internals.reduceSize(newFile.title, bitrate);
+      finalTitle = await internals.reduceSize(
+        newFile.title,
+        bitrate,
+        newFile.nbTracks
+      );
     }
 
     // Append title to the list of processed files

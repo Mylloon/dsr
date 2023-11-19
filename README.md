@@ -41,6 +41,7 @@ Helper for sharing video captured by NVidia Shadowplay in Discord.
   - [x] If already under the limit, the file won't be compressed
   - [x] Nitro suppport via `/nitro` flag
 - [x] Merge all audio files into one track, while keeping the original ones (keeping track's title too)
+  - [x] Works with one-audio file too
 - [x] Support multiples files
 
 ## Package the app for Windows

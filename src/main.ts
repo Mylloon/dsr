@@ -57,10 +57,14 @@ app.whenReady().then(() => {
   /** Get filename of a path */
   const getFilename = (filepath: string) => path.parse(filepath).base;
 
-  /** Merge all audios track of a video into one */
+  /** Merge all audios track of a video into one
+   *  In case video have only one track, silently pass */
   const mergeAudio = async (file: string) => {
+    const copy = process.platform === "win32" ? "COPY" : "cp";
+    const copyArg = process.platform === "win32" ? "/Y" : "";
+
     const tmpFile = getNewFilename(file, "TMP_");
-    const outFile = getNewFilename(file, "(merged audio) ");
+    let outFile;
 
     // Merge 2 audio
     // See: https://trac.ffmpeg.org/wiki/AudioChannelManipulation#a2stereostereo
@@ -70,22 +74,49 @@ app.whenReady().then(() => {
        -filter_complex "[0:a]amerge=inputs=2[a]" -ac 2 -map 0:v -map "[a]" \
        -c:v copy \
        "${tmpFile}"`
-    ).catch((e) => printAndDevTool(win, e));
+    )
+      .catch(async (e) => {
+        if (
+          `${e}`.includes(
+            "Cannot find a matching stream for unlabeled input pad 1 on filter"
+          )
+        ) {
+          // Only one audio in the file
+          outFile = getNewFilename(file, "(processed) ");
 
-    // Add merged audio as first position to original video and make it default
-    // About disposition: https://ffmpeg.org/ffmpeg.html#Main-options
-    // Also rename all tracks accordingly to what they are
-    await execute(
-      `"${ffmpegPath}" -y \
-       -i "${tmpFile}" -i "${file}" \
-       -map 0 -map 1:a -c:v copy \
-       -disposition:a 0 -disposition:a:0 default \
-       ${metadataAudio} \
-       "${outFile}"`
-    ).catch((e) => printAndDevTool(win, e));
+          // Do a copy
+          await execute(`${copy} "${file}" "${outFile}" ${copyArg}`).catch(
+            (e) => printAndDevTool(win, e)
+          );
 
-    // Delete the temporary video file
-    deleteFile(tmpFile);
+          // We throw the error since we do not want to merge any audio
+          return Promise.resolve("skip");
+        } else {
+          // Error handling
+          printAndDevTool(win, e);
+        }
+      })
+      .then(async (val) => {
+        if (val == "skip") {
+          return;
+        }
+
+        outFile = getNewFilename(file, "(merged audio) ");
+        // Add merged audio as first position to original video and make it default
+        // About disposition: https://ffmpeg.org/ffmpeg.html#Main-options
+        // Also rename all tracks accordingly to what they are
+        await execute(
+          `"${ffmpegPath}" -y \
+         -i "${tmpFile}" -i "${file}" \
+         -map 0 -map 1:a -c:v copy \
+         -disposition:a 0 -disposition:a:0 default \
+         ${metadataAudio} \
+         "${outFile}"`
+        ).catch((e) => printAndDevTool(win, e));
+
+        // Delete the temporary video file
+        deleteFile(tmpFile);
+      });
 
     const duration = getVideoDuration(outFile);
     const stats = statSync(outFile);

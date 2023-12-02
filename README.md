@@ -30,14 +30,17 @@ Helper for sharing video captured by NVidia Shadowplay in Discord.
     "REG ADD 'HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\dsr' /f /v InstallLocation /t REG_SZ /d '%LOCALAPPDATA%\DSR'"
   ```
 
-  If you have nitro, add `/nitro` flag when running DSR.
   </details>
+
+> - If you have Discord Nitro: add `/nitro` flag when running DSR.
+> - If you have an NVidia GPU with NVenc: add `/nvenc` flag when running DSR.
 
 ## More info
 
 - [x] KISS interface
   - [x] Support drag&drop
 - [x] Keep the video under 25mb (discord limitation)
+  - [x] NVenc support
   - [x] If already under the limit, the file won't be compressed
   - [x] Nitro suppport via `/nitro` flag
 - [x] Merge all audio files into one track, while keeping the original ones (keeping track's title too)

@@ -141,7 +141,7 @@ app.whenReady().then(() => {
     nbTracks: number
   ) => {
     const audioBitrate = 400; // keep some room
-    const videoBitrate = bitrate - audioBitrate;
+    let videoBitrate = bitrate - audioBitrate;
 
     const finalFile = getNewFilename(file, "Compressed - ");
 
@@ -156,17 +156,30 @@ app.whenReady().then(() => {
       })
       .join(" ");
 
+    let codec = "libx264";
+    let hwAcc = "";
+
+    const argv = process.argv;
+    if (argv.includes("/nvenc")) {
+      // Use NVenc
+      codec = "h264_nvenc";
+      hwAcc = "-hwaccel cuda";
+
+      // Increase video bitrate
+      videoBitrate = Math.floor(videoBitrate * 1.85);
+    }
+
     // Compress the video
     // Add metadata to audio's track
     await execute(
-      `"${ffmpegPath}" -y \
+      `"${ffmpegPath}" -y ${hwAcc} \
        -i "${file}" \
-       -c:v libx264 -b:v ${videoBitrate}k -pass 1 -an -f mp4 \
+       -c:v ${codec} -b:v ${videoBitrate}k -pass 1 -an -f mp4 \
        ${nul} \
        && \
-       "${ffmpegPath}" -y \
+       "${ffmpegPath}" -y ${hwAcc} \
        -i "${file}" \
-       -c:v libx264 -b:v ${videoBitrate}k -pass 2 -c:a copy \
+       -c:v ${codec} -b:v ${videoBitrate}k -pass 2 -c:a copy \
        ${mappingTracks} -f mp4 \
        ${metadataAudio} \
        "${finalFile}"`

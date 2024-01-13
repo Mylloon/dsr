@@ -4,6 +4,8 @@ import path = require("path");
 import { BrowserWindow } from "electron";
 import { existsSync, unlink } from "fs";
 
+export const processes: child_process.ChildProcess[] = [];
+
 /** Create a new filename from the OG one */
 export const getNewFilename = (ogFile: string, part: string) => {
   const oldFile = path.parse(ogFile);
@@ -28,12 +30,17 @@ export const execute = (
   command: string
 ): Promise<{ stdout: string; stderr: string }> => {
   return new Promise((resolve, reject) => {
-    child_process.exec(command, (error, stdout, stderr) => {
+    const process = child_process.exec(command, (error, stdout, stderr) => {
       if (error) {
         reject(error);
       } else {
         resolve({ stdout, stderr });
       }
+    });
+
+    processes.push(process);
+    process.on("exit", () => {
+      processes.splice(processes.indexOf(process), 1);
     });
   });
 };

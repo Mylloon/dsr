@@ -20,6 +20,8 @@ const metadataAudio = `-metadata:s:a:0 title="System sounds and microphone" \
                        -metadata:s:a:1 title="System sounds" \
                        -metadata:s:a:2 title="Microphone"`;
 
+const extraArgs = "-movflags +faststart";
+
 /** Create a new window */
 const createWindow = () => {
   const win = new BrowserWindow({
@@ -60,9 +62,6 @@ app.whenReady().then(() => {
   /** Merge all audios track of a video into one
    *  In case video have only one track, silently pass */
   const mergeAudio = async (file: string) => {
-    const copy = process.platform === "win32" ? "COPY" : "cp";
-    const copyArg = process.platform === "win32" ? "/Y" : "";
-
     const tmpFile = getNewFilename(file, "TMP_");
     let outFile;
 
@@ -89,9 +88,11 @@ app.whenReady().then(() => {
           nbTracks += 1;
 
           // Do a copy
-          await execute(`${copy} "${file}" "${outFile}" ${copyArg}`).catch(
-            (e) => printAndDevTool(win, e)
-          );
+          await execute(`${ffmpegPath}" -y \
+          -i "${file}" \
+          -codec copy \
+          "${extraArgs}" \
+          "${outFile}"`).catch((e) => printAndDevTool(win, e));
 
           // We throw the error since we do not want to merge any audio
           return Promise.resolve("skip");
@@ -116,6 +117,7 @@ app.whenReady().then(() => {
          -map 0 -map 1:a -c:v copy \
          -disposition:a 0 -disposition:a:0 default \
          ${metadataAudio} \
+         ${extraArgs} \
          "${outFile}"`
         ).catch((e) => printAndDevTool(win, e));
 
@@ -182,6 +184,7 @@ app.whenReady().then(() => {
        -c:v ${codec} -b:v ${videoBitrate}k -pass 2 -c:a copy \
        ${mappingTracks} -f mp4 \
        ${metadataAudio} \
+       ${extraArgs} \
        "${finalFile}"`
     ).catch((e) => printAndDevTool(win, e));
 

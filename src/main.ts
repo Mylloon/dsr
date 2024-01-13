@@ -7,6 +7,7 @@ import {
   getNewFilename,
   getVideoDuration,
   printAndDevTool,
+  processes,
 } from "./utils/misc";
 import path = require("path");
 import ffmpegPath = require("ffmpeg-static");
@@ -225,4 +226,12 @@ app.whenReady().then(() => {
   );
   ipcMain.handle("exit", () => (error ? {} : app.quit()));
   ipcMain.handle("confirmation", (_, text: string) => confirmation(text));
+});
+
+app.on("window-all-closed", () => {
+  processes.forEach((proc) => {
+    proc.kill();
+  });
+
+  app.quit();
 });

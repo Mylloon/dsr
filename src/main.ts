@@ -88,7 +88,7 @@ app.whenReady().then(() => {
           nbTracks += 1;
 
           // Do a copy
-          await execute(`${ffmpegPath}" -y \
+          await execute(`"${ffmpegPath}" -y \
           -i "${file}" \
           -codec copy \
           ${extraArgs} \

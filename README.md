@@ -1,6 +1,8 @@
 # Discord Video Sharing
 
-Helper for sharing video captured by NVidia Shadowplay in Discord.
+Tool for sharing video to Discord.
+
+> This tool was primarily made for video captured by NVidia Shadowplay.
 
 ## Download/Install
 
@@ -46,6 +48,7 @@ Helper for sharing video captured by NVidia Shadowplay in Discord.
 - [x] Merge all audio files into one track, while keeping the original ones (keeping track's title too)
   - [x] Works with one-audio file too
 - [x] Support multiples files
+- [x] Optimize for video streaming
 
 ## Package the app for Windows
 

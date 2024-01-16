@@ -91,7 +91,7 @@ app.whenReady().then(() => {
           await execute(`${ffmpegPath}" -y \
           -i "${file}" \
           -codec copy \
-          "${extraArgs}" \
+          ${extraArgs} \
           "${outFile}"`).catch((e) => printAndDevTool(win, e));
 
           // We throw the error since we do not want to merge any audio

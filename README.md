@@ -9,30 +9,11 @@ Tool for sharing video to Discord.
 2 choices :
 
 - Manually head to [the release page](https://git.mylloon.fr/Anri/dsr/releases/latest).
-- <details>
-      <summary>Download it via command lines</summary>
+- Download it via PowerShell:
 
-  Copy and paste this snippet into the windows command prompt:
-
-  ```batch
-  PowerShell -Command "" ^
-    "$releases = 'https://git.mylloon.fr/api/v1/repos/Anri/dsr/releases/latest';" ^
-    "$link = (Invoke-WebRequest $releases | ConvertFrom-Json)[0].assets.browser_download_url;" ^
-    "$archive = '%TEMP%\dsr.zip';" ^
-    "Invoke-WebRequest -Uri $link -OutFile $archive;" ^
-    "Remove-Item '%LOCALAPPDATA%\DSR' -Recurse -ErrorAction SilentlyContinue;" ^
-    "Expand-Archive -Path $archive -DestinationPath '%LOCALAPPDATA%\DSR' -Force;" ^
-    "Move-Item -Path '%LOCALAPPDATA%\DSR\dsr-win32-x64\*' -Destination '%LOCALAPPDATA%\DSR' -Force;" ^
-    "Remove-Item '%LOCALAPPDATA%\DSR\dsr-win32-x64';" ^
-    "$WshShell = New-Object -comObject WScript.Shell;" ^
-    "$Shortcut = $WshShell.CreateShortcut('%APPDATA%\Microsoft\Windows\Start Menu\Programs\DSR.lnk');" ^
-    "$Shortcut.TargetPath = '%LOCALAPPDATA%\DSR\dsr.exe';" ^
-    "$Shortcut.Save();" ^
-    "REG ADD 'HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\dsr' /f /v DisplayName /t REG_SZ /d 'DSR';" ^
-    "REG ADD 'HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\dsr' /f /v InstallLocation /t REG_SZ /d '%LOCALAPPDATA%\DSR'"
+  ```powershell
+  irm https://git.mylloon.fr/Anri/dsr/raw/branch/main/install.ps1 | iex
   ```
-
-  </details>
 
 > - If you have Discord Nitro: add `/nitro` flag when running DSR.
 > - If you have an NVidia GPU with NVenc: add `/nvenc` flag when running DSR.

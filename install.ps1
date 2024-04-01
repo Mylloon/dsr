@@ -22,3 +22,17 @@ $Shortcut.Save()
 # Add new app to registry
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\dsr" /f /v DisplayName /t REG_SZ /d "DSR"
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\dsr" /f /v InstallLocation /t REG_SZ /d "$env:LOCALAPPDATA\DSR"
+
+# Ask user to add a shortcut to the desktop
+if ($Host.UI.PromptForChoice(
+  "***********************",
+  "Add a desktop shortcut?",
+  @(
+      [System.Management.Automation.Host.ChoiceDescription]::new("&Yes", "Add a shortcut to your desktop.")
+      [System.Management.Automation.Host.ChoiceDescription]::new("&No", "Skip the shortcut creation.")
+  ), 1) -eq 0) {
+  $WshShell = New-Object -comObject WScript.Shell
+  $Shortcut = $WshShell.CreateShortcut("$env:HOMEPATH\Desktop\DSR.lnk")
+  $Shortcut.TargetPath = "$env:LOCALAPPDATA\DSR\dsr.exe"
+  $Shortcut.Save()
+}

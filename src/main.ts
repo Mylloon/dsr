@@ -200,7 +200,7 @@ app.whenReady().then(() => {
     deleteFile(file);
 
     // Delete the 2 pass temporary files
-    deleteTwoPassFiles(file);
+    deleteTwoPassFiles(process.cwd());
 
     return finalFile;
   };

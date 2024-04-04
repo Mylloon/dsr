@@ -11,6 +11,8 @@ import {
 import path = require("path");
 import ffmpegPath = require("ffmpeg-static");
 
+let error = false;
+
 const moviesFilter = {
   name: "Videos",
   extensions: ["mp4", "mkv"],
@@ -21,6 +23,12 @@ const metadataAudio = `-metadata:s:a:0 title="System sounds and microphone" \
                        -metadata:s:a:2 title="Microphone"`;
 
 const extraArgs = "-movflags +faststart";
+
+/** Register a new error  */
+const registerError = (win: BrowserWindow, err: string) => {
+  error = true;
+  printAndDevTool(win, err);
+};
 
 /** Create a new window */
 const createWindow = () => {
@@ -92,13 +100,13 @@ app.whenReady().then(() => {
           -i "${file}" \
           -codec copy \
           ${extraArgs} \
-          "${outFile}"`).catch((e) => printAndDevTool(win, e));
+          "${outFile}"`).catch((e) => registerError(win, e));
 
           // We throw the error since we do not want to merge any audio
           return Promise.resolve("skip");
         } else {
           // Error handling
-          printAndDevTool(win, e);
+          registerError(win, e);
         }
       })
       .then(async (val) => {
@@ -119,7 +127,7 @@ app.whenReady().then(() => {
          ${metadataAudio} \
          ${extraArgs} \
          "${outFile}"`
-        ).catch((e) => printAndDevTool(win, e));
+        ).catch((e) => registerError(win, e));
 
         // Delete the temporary video file
         deleteFile(tmpFile);
@@ -186,7 +194,7 @@ app.whenReady().then(() => {
        ${metadataAudio} \
        ${extraArgs} \
        "${finalFile}"`
-    ).catch((e) => printAndDevTool(win, e));
+    ).catch((e) => registerError(win, e));
 
     // Delete the old video file
     deleteFile(file);
@@ -208,6 +216,6 @@ app.whenReady().then(() => {
     (_, file: string, bitrate: number, nbTracks: number) =>
       reduceSize(file, bitrate, nbTracks)
   );
-  ipcMain.handle("exit", () => app.quit());
+  ipcMain.handle("exit", () => (error ? {} : app.quit()));
   ipcMain.handle("confirmation", (_, text: string) => confirmation(text));
 });

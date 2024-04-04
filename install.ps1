@@ -32,7 +32,8 @@ if ($Host.UI.PromptForChoice(
       [System.Management.Automation.Host.ChoiceDescription]::new("&No", "Skip the shortcut creation.")
   ), 1) -eq 0) {
   $WshShell = New-Object -comObject WScript.Shell
-  $Shortcut = $WshShell.CreateShortcut("$env:HOMEPATH\Desktop\DSR.lnk")
+  $Desktop = [Environment]::GetFolderPath("Desktop")
+  $Shortcut = $WshShell.CreateShortcut("$Desktop\DSR.lnk")
   $Shortcut.TargetPath = "$env:LOCALAPPDATA\DSR\dsr.exe"
   $Shortcut.Save()
 }

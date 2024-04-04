@@ -144,4 +144,5 @@ const main = async () => {
   );
   await internals.exit();
 };
+
 main();

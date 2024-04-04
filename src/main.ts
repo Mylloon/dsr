@@ -144,7 +144,7 @@ app.whenReady().then(() => {
     };
   };
 
-  /* Reduce size of a file */
+  /** Reduce size of a file */
   const reduceSize = async (
     file: string,
     bitrate: number,

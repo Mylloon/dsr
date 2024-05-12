@@ -34,7 +34,9 @@ const getFiles = async () => {
     // Exit if a file isn't supported in the list
     if (
       files.filter((file) =>
-        allowedExtensions.some((ext) => file.endsWith(ext))
+        allowedExtensions.some((ext) =>
+          file.toLowerCase().endsWith(ext.toLowerCase())
+        )
       ).length !== files.length
     ) {
       await internals.exit();

@@ -18,6 +18,14 @@ Tool for sharing video to Discord.
 > - If you have Discord Nitro: add `/nitro` flag when running DSR.
 > - If you have an NVidia GPU with NVenc: add `/nvenc` flag when running DSR.
 
+## Update
+
+Via PowerShell:
+
+```powershell
+iex "& { $(irm 'https://git.mylloon.fr/Anri/dsr/raw/branch/main/install.ps1') } -update"
+```
+
 ## More info
 
 - [x] KISS interface

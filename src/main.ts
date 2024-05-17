@@ -12,6 +12,8 @@ import {
 import path = require("path");
 import ffmpegPath = require("ffmpeg-static");
 
+const kill = require("terminate");
+
 let error = false;
 
 const moviesFilter = {
@@ -229,8 +231,8 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
-  processes.forEach((proc) => {
-    proc.kill();
+  processes.forEach((process) => {
+    kill(process.pid);
   });
 
   app.quit();

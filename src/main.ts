@@ -171,7 +171,7 @@ app.whenReady().then(() => {
     // Mapping of tracks for FFMPEG
     const mappingTracks = Array(nbTracks)
       .fill("-map 0:")
-      .map(function (str, index) {
+      .map((str, index) => {
         return str + index;
       })
       .join(" ");

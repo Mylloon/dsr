@@ -17,18 +17,18 @@ Expand-Archive -Path $archive -DestinationPath "$env:LOCALAPPDATA\DSR" -Force
 Move-Item -Path "$env:LOCALAPPDATA\DSR\dsr-win32-x64\*" -Destination "$env:LOCALAPPDATA\DSR" -Force
 Remove-Item "$env:LOCALAPPDATA\DSR\dsr-win32-x64"
 
-# Add shortcut
-$WshShell = New-Object -comObject WScript.Shell
-$Shortcut = $WshShell.CreateShortcut("$env:APPDATA\Microsoft\Windows\Start Menu\Programs\DSR.lnk")
-$Shortcut.TargetPath = "$env:LOCALAPPDATA\DSR\dsr.exe"
-$Shortcut.Save()
-
-# Add new app to registry
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\dsr" /f /v DisplayName /t REG_SZ /d "DSR"
-REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\dsr" /f /v InstallLocation /t REG_SZ /d "$env:LOCALAPPDATA\DSR"
-
 # Ask user to add a shortcut to the desktop
 if (-not $update) {
+  # Add shortcut
+  $WshShell = New-Object -comObject WScript.Shell
+  $Shortcut = $WshShell.CreateShortcut("$env:APPDATA\Microsoft\Windows\Start Menu\Programs\DSR.lnk")
+  $Shortcut.TargetPath = "$env:LOCALAPPDATA\DSR\dsr.exe"
+  $Shortcut.Save()
+
+  # Add new app to registry
+  REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\dsr" /f /v DisplayName /t REG_SZ /d "DSR"
+  REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\dsr" /f /v InstallLocation /t REG_SZ /d "$env:LOCALAPPDATA\DSR"
+
   if ($Host.UI.PromptForChoice(
     "***********************",
     "Add a desktop shortcut?",

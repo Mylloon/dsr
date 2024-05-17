@@ -1,3 +1,7 @@
+param (
+  [switch]$update
+)
+
 # Enable TLSv1.2 for compatibility with older clients
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
@@ -24,16 +28,18 @@ REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\dsr" /f /v Dis
 REG ADD "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\dsr" /f /v InstallLocation /t REG_SZ /d "$env:LOCALAPPDATA\DSR"
 
 # Ask user to add a shortcut to the desktop
-if ($Host.UI.PromptForChoice(
-  "***********************",
-  "Add a desktop shortcut?",
-  @(
+if (-not $update) {
+  if ($Host.UI.PromptForChoice(
+    "***********************",
+    "Add a desktop shortcut?",
+    @(
       [System.Management.Automation.Host.ChoiceDescription]::new("&Yes", "Add a shortcut to your desktop.")
       [System.Management.Automation.Host.ChoiceDescription]::new("&No", "Skip the shortcut creation.")
-  ), 1) -eq 0) {
-  $WshShell = New-Object -comObject WScript.Shell
-  $Desktop = [Environment]::GetFolderPath("Desktop")
-  $Shortcut = $WshShell.CreateShortcut("$Desktop\DSR.lnk")
-  $Shortcut.TargetPath = "$env:LOCALAPPDATA\DSR\dsr.exe"
-  $Shortcut.Save()
+    ), 1) -eq 0) {
+    $WshShell = New-Object -comObject WScript.Shell
+    $Desktop = [Environment]::GetFolderPath("Desktop")
+    $Shortcut = $WshShell.CreateShortcut("$Desktop\DSR.lnk")
+    $Shortcut.TargetPath = "$env:LOCALAPPDATA\DSR\dsr.exe"
+    $Shortcut.Save()
+  }
 }

@@ -186,7 +186,7 @@ app.whenReady().then(() => {
       hwAcc = "-hwaccel cuda";
 
       // Increase video bitrate
-      videoBitrate = Math.floor(videoBitrate * 1.8);
+      videoBitrate = Math.floor(videoBitrate * 1.7);
     }
 
     // Compress the video

@@ -1,4 +1,4 @@
-import { BrowserWindow, app, dialog, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, Notification } from "electron";
 import { statSync } from "fs";
 import {
   deleteFile,
@@ -61,6 +61,13 @@ app.whenReady().then(() => {
 
   /** Send confirmation to user */
   const confirmation = async (message: string) => {
+    // Send notification
+    new Notification({
+      title: "Status",
+      body: message,
+    }).show();
+
+    // Open dialog
     await dialog.showMessageBox(win, { message });
   };
 

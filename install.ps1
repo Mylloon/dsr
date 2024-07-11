@@ -15,6 +15,9 @@ $archive = "$env:TEMP\dsr.zip"
 Invoke-WebRequest -Uri $link -OutFile $archive
 Remove-Item "$path" -Recurse -ErrorAction SilentlyContinue
 
+# Close running DSR
+Stop-Process -Name "DSR" -Force
+
 # Installation
 Expand-Archive -Path $archive -DestinationPath "$path" -Force
 Move-Item -Path "$path\dsr-win32-x64\*" -Destination "$path" -Force

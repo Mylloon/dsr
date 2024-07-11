@@ -102,7 +102,7 @@ app.whenReady().then(() => {
           )
         ) {
           // Only one audio in the file
-          outFile = getNewFilename(file, "(processed) ");
+          outFile = getNewFilename(file, "(nomerge) ");
           nbTracks += 1;
 
           // Do a copy
@@ -112,7 +112,20 @@ app.whenReady().then(() => {
           ${extraArgs} \
           "${outFile}"`).catch((e) => registerError(win, e));
 
-          // We throw the error since we do not want to merge any audio
+          // We throw an error since we do not want to merge any audio
+          return Promise.resolve("skip");
+        } else if (`${e}`.includes("matches no stream")) {
+          // No audio in the file
+          outFile = getNewFilename(file, "(noaudio) ");
+
+          // Do a copy
+          await execute(`"${ffmpegPath}" -y \
+            -i "${file}" \
+            -codec copy \
+            ${extraArgs} \
+            "${outFile}"`).catch((e) => registerError(win, e));
+
+          // We throw an error since we do not want to merge any audio
           return Promise.resolve("skip");
         } else {
           // Error handling

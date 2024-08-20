@@ -16,7 +16,7 @@ Invoke-WebRequest -Uri $link -OutFile $archive
 Remove-Item "$path" -Recurse -ErrorAction SilentlyContinue
 
 # Close running DSR
-Stop-Process -Name "DSR" -Force
+Stop-Process -Name "DSR" -Force -ErrorAction SilentlyContinue
 
 # Installation
 Expand-Archive -Path $archive -DestinationPath "$path" -Force

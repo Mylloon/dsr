@@ -19,6 +19,13 @@ export const getVideoDuration = (file: string) => {
   return parseFloat(durationString);
 };
 
+/** Return the number of audio tracks */
+export const getNumberOfAudioTracks = (file: string) => {
+  const command = `"${ffprobe.path}" -v error -show_entries stream=index -select_streams a -of json "${file}"`;
+  const result = child_process.execSync(command, { encoding: "utf8" });
+  return JSON.parse(result).streams.length;
+};
+
 /** Print an error to the console and open the dev tool panel */
 export const printAndDevTool = (win: BrowserWindow, err: string) => {
   win.webContents.openDevTools();

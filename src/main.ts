@@ -6,6 +6,7 @@ import {
   execute,
   getNewFilename,
   getVideoDuration,
+  getNumberOfAudioTracks,
   printAndDevTool,
   processes,
 } from "./utils/misc";
@@ -78,67 +79,27 @@ app.whenReady().then(() => {
   const getFilename = (filepath: string) => path.parse(filepath).base;
 
   /** Merge all audios track of a video into one
-   *  In case video have only one track, silently pass */
+   *  In case video doesn't have exactly two audio streams, silently pass */
   const mergeAudio = async (file: string) => {
     const tmpFile = getNewFilename(file, "TMP_");
     let outFile;
 
-    // One track for the video
-    let nbTracks = 1;
+    const nbTracks = getNumberOfAudioTracks(file);
 
-    // Merge 2 audio
-    // See: https://trac.ffmpeg.org/wiki/AudioChannelManipulation#a2stereostereo
-    await execute(
-      `"${ffmpegPath}" -y \
-       -i "${file}" \
-       -filter_complex "[0:a]amerge=inputs=2[a]" -ac 2 -map 0:v -map "[a]" \
-       -c:v copy \
-       "${tmpFile}"`
-    )
-      .catch(async (e) => {
-        if (
-          `${e}`.includes(
-            "Cannot find a matching stream for unlabeled input pad 1 on filter"
-          )
-        ) {
-          // Only one audio in the file
-          outFile = getNewFilename(file, "(nomerge) ");
-          nbTracks += 1;
-
-          // Do a copy
-          await execute(`"${ffmpegPath}" -y \
-          -i "${file}" \
-          -codec copy \
-          ${extraArgs} \
-          "${outFile}"`).catch((e) => registerError(win, e));
-
-          // We throw an error since we do not want to merge any audio
-          return Promise.resolve("skip");
-        } else if (`${e}`.includes("matches no stream")) {
-          // No audio in the file
-          outFile = getNewFilename(file, "(noaudio) ");
-
-          // Do a copy
-          await execute(`"${ffmpegPath}" -y \
-            -i "${file}" \
-            -codec copy \
-            ${extraArgs} \
-            "${outFile}"`).catch((e) => registerError(win, e));
-
-          // We throw an error since we do not want to merge any audio
-          return Promise.resolve("skip");
-        } else {
-          // Error handling
-          registerError(win, e);
-        }
-      })
-      .then(async (val) => {
-        if (val == "skip") {
-          return;
-        }
+    switch (nbTracks) {
+      case 2:
+        // Merge 2 audio
+        // See: https://trac.ffmpeg.org/wiki/AudioChannelManipulation#a2stereostereo
+        await execute(
+          `"${ffmpegPath}" -y \
+           -i "${file}" \
+           -filter_complex "[0:a]amerge=inputs=2[a]" -ac 2 -map 0:v -map "[a]" \
+           -c:v copy \
+           "${tmpFile}"`
+        );
 
         outFile = getNewFilename(file, "(merged audio) ");
-        nbTracks += 3;
+
         // Add merged audio as first position to original video and make it default
         // About disposition: https://ffmpeg.org/ffmpeg.html#Main-options
         // Also rename all tracks accordingly to what they are
@@ -154,7 +115,20 @@ app.whenReady().then(() => {
 
         // Delete the temporary video file
         deleteFile(tmpFile);
-      });
+
+        break;
+      default:
+        // Other cases: no merge needed
+        outFile = getNewFilename(file, "(nomerge) ");
+
+        // Do a copy
+        await execute(`"${ffmpegPath}" -y \
+          -i "${file}" \
+          -codec copy \
+          ${extraArgs} \
+          "${outFile}"`).catch((e) => registerError(win, e));
+        break;
+    }
 
     const duration = getVideoDuration(outFile);
     const stats = statSync(outFile);

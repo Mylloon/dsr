@@ -1,4 +1,4 @@
-# Discord Video Sharing
+# Discord Video Sharing ![status-badge](https://git.mylloon.fr/Anri/dsr/badges/workflows/release.yml/badge.svg)
 
 Tool for sharing video to Discord.
 

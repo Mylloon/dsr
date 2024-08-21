@@ -124,6 +124,7 @@ app.whenReady().then(() => {
         // Do a copy
         await execute(`"${ffmpegPath}" -y \
           -i "${file}" \
+          -map 0 \
           -codec copy \
           ${extraArgs} \
           "${outFile}"`).catch((e) => registerError(win, e));

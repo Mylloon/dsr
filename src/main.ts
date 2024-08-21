@@ -1,5 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, Notification } from "electron";
-import { statSync } from "fs";
+import { statSync, copyFileSync } from "fs";
 import {
   deleteFile,
   deleteTwoPassFiles,
@@ -122,12 +122,7 @@ app.whenReady().then(() => {
         outFile = getNewFilename(file, "(nomerge) ");
 
         // Do a copy
-        await execute(`"${ffmpegPath}" -y \
-          -i "${file}" \
-          -map 0 \
-          -codec copy \
-          ${extraArgs} \
-          "${outFile}"`).catch((e) => registerError(win, e));
+        copyFileSync(file, outFile);
         break;
     }
 
@@ -156,8 +151,8 @@ app.whenReady().then(() => {
     // Trash the output, depends on the platform
     const nul = process.platform === "win32" ? "NUL" : "/dev/null";
 
-    // Mapping of tracks for FFMPEG
-    const mappingTracks = Array(nbTracks)
+    // Mapping of tracks for FFMPEG, adding 1 for the video stream
+    const mappingTracks = Array(nbTracks + 1)
       .fill("-map 0:")
       .map((str, index) => {
         return str + index;

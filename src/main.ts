@@ -26,7 +26,7 @@ const metadataAudio = `-metadata:s:a:0 title="System sounds and microphone" \
                        -metadata:s:a:1 title="System sounds" \
                        -metadata:s:a:2 title="Microphone"`;
 
-const extraArgs = "-movflags +faststart";
+const shareOpt = "-movflags +faststart";
 
 /** Register a new error  */
 const registerError = (win: BrowserWindow, err: string) => {
@@ -109,7 +109,6 @@ app.whenReady().then(() => {
          -map 0 -map 1:a -c:v copy \
          -disposition:a 0 -disposition:a:0 default \
          ${metadataAudio} \
-         ${extraArgs} \
          "${outFile}"`
         ).catch((e) => registerError(win, e));
 
@@ -185,7 +184,7 @@ app.whenReady().then(() => {
        -c:v ${codec} -b:v ${videoBitrate}k -pass 2 -c:a copy \
        ${mappingTracks} -f mp4 \
        ${metadataAudio} \
-       ${extraArgs} \
+       ${shareOpt} \
        "${finalFile}"`
     ).catch((e) => registerError(win, e));
 
@@ -194,6 +193,25 @@ app.whenReady().then(() => {
 
     // Delete the 2 pass temporary files
     deleteTwoPassFiles(process.cwd());
+
+    return finalFile;
+  };
+
+  /** Move metadata at the begenning of the file */
+  const moveMetadata = async (file: string) => {
+    const finalFile = getNewFilename(file, "Shareable - ");
+
+    // Optimize for streaming
+    await execute(
+      `"${ffmpegPath}" -y \
+       -i "${file}" \
+       -map 0 -codec copy \
+       ${shareOpt} \
+       "${finalFile}"`
+    ).catch((e) => registerError(win, e));
+
+    // Delete the old video file
+    deleteFile(file);
 
     return finalFile;
   };
@@ -209,6 +227,7 @@ app.whenReady().then(() => {
     (_, file: string, bitrate: number, nbTracks: number) =>
       reduceSize(file, bitrate, nbTracks)
   );
+  ipcMain.handle("moveMetadata", (_, file: string) => moveMetadata(file));
   ipcMain.handle("exit", () => (error ? {} : app.quit()));
   ipcMain.handle("confirmation", (_, text: string) => confirmation(text));
 });

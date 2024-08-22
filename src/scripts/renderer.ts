@@ -18,6 +18,7 @@ let internals: {
     bitrate: number,
     nbTracks: number
   ) => Promise<string>;
+  moveMetadata: (file: string) => Promise<string>;
   confirmation: (text: string) => Promise<void>;
 };
 
@@ -133,6 +134,11 @@ const main = async () => {
         bitrate,
         newFile.nbTracks
       );
+    } else {
+      updateMessage(`\nPréparation pour le partage...`, true, Mode.Append);
+
+      // Move the metadata to make it playable before everything is downloaded
+      finalTitle = await internals.moveMetadata(newFile.title);
     }
 
     // Append title to the list of processed files

@@ -21,13 +21,13 @@
     "@electron-forge/maker-zip": "^7.4",
     "ffmpeg-static": "^5.2",
     "ffprobe-static": "^3.1",
-    "terminate": "^2.6",
-    "typescript": "^5.4"
+    "terminate": "^2.8",
+    "typescript": "^5.5"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.4",
     "@types/ffprobe-static": "^2.0",
-    "electron": "^30.0"
+    "electron": "^32.0"
   },
   "config": {
     "forge": {

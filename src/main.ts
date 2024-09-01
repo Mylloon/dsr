@@ -51,6 +51,11 @@ const createWindow = () => {
   return win;
 };
 
+// For notification on Windows
+if (process.platform === "win32") {
+  app.setAppUserModelId(app.name);
+}
+
 /* Ready to create the window */
 app.whenReady().then(() => {
   const win = createWindow();

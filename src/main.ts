@@ -199,7 +199,7 @@ app.whenReady().then(() => {
 
   /** Move metadata at the begenning of the file */
   const moveMetadata = async (file: string) => {
-    const finalFile = getNewFilename(file, "Shareable - ");
+    const finalFile = getNewFilename(file, "Broadcastable - ");
 
     // Optimize for streaming
     await execute(

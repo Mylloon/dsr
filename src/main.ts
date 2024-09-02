@@ -147,7 +147,7 @@ app.whenReady().then(() => {
     bitrate: number,
     nbTracks: number
   ) => {
-    const audioBitrate = 400; // keep some room
+    const audioBitrate = 500; // keep some room
     let videoBitrate = bitrate - audioBitrate;
 
     const finalFile = getNewFilename(file, "Compressed - ");

@@ -25,3 +25,4 @@ jobs:
         with:
           token: ${{ secrets.TOKEN }}
           files: out/make/zip/win32/x64/dsr-win32-x64-${{ github.ref_name }}.zip
+          draft: true

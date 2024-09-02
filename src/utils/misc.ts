@@ -1,8 +1,10 @@
-import ffprobe = require("ffprobe-static");
 import child_process = require("child_process");
 import path = require("path");
 import { BrowserWindow } from "electron";
 import { existsSync, unlink } from "fs";
+
+import ffprobe = require("ffprobe-static");
+const ffprobePath = ffprobe.path.replace("app.asar", "app.asar.unpacked");
 
 export const processes: child_process.ChildProcess[] = [];
 
@@ -14,14 +16,14 @@ export const getNewFilename = (ogFile: string, part: string) => {
 
 /** Return the duration of a video in second */
 export const getVideoDuration = (file: string) => {
-  const command = `"${ffprobe.path}" -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${file}"`;
+  const command = `"${ffprobePath}" -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${file}"`;
   const durationString = child_process.execSync(command).toString().trim();
   return parseFloat(durationString);
 };
 
 /** Return the number of audio tracks */
 export const getNumberOfAudioTracks = (file: string) => {
-  const command = `"${ffprobe.path}" -v error -show_entries stream=index -select_streams a -of json "${file}"`;
+  const command = `"${ffprobePath}" -v error -show_entries stream=index -select_streams a -of json "${file}"`;
   const result = child_process.execSync(command, { encoding: "utf8" });
   return JSON.parse(result).streams.length;
 };

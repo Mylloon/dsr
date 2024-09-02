@@ -11,7 +11,9 @@ import {
   processes,
 } from "./utils/misc";
 import path = require("path");
-import ffmpegPath = require("ffmpeg-static");
+
+import ffmpeg = require("ffmpeg-static");
+const ffmpegPath = `${ffmpeg}`.replace("app.asar", "app.asar.unpacked");
 
 const kill = require("terminate");
 

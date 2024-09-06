@@ -16,6 +16,7 @@ Tool for sharing video to Discord.
   ```
 
 > - If you have Discord Nitro: add `/nitro` flag when running DSR.
+> - If you have Discord Nitro Basic: add `/nitrobasic` flag when running DSR.
 > - If you have an NVidia GPU with NVenc: add `/nvenc` flag when running DSR.
 
 ## More info
@@ -23,7 +24,7 @@ Tool for sharing video to Discord.
 - [x] KISS interface
   - [x] Support drag&drop into the icon
 - [x] Keep the video under 25mb (discord limitation)
-  - [x] NVenc support
+  - [x] Basic NVenc support
   - [x] If already under the limit, the file won't be compressed
   - [x] Nitro suppport via `/nitro` flag
 - [x] Merge audio files into one track when recorded with system audio and microphone

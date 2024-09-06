@@ -56,13 +56,16 @@ const getFiles = async () => {
 /** Returns maximum allowed size for files in MB */
 const fetchMaxSize = async () => {
   const argv = await internals.argv();
-  if (argv.includes("/nitro")) {
+  if (argv.includes("/nitrobasic")) {
+    // Nitro Basic user
+    return 50;
+  } else if (argv.includes("/nitro")) {
     // Nitro user
     return 500;
+  } else {
+    // Free user
+    return 25;
   }
-
-  // Free user
-  return 25;
 };
 
 /** Either replace the message, or add some info */

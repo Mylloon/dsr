@@ -23,10 +23,10 @@ Tool for sharing video to Discord.
 
 - [x] KISS interface
   - [x] Support drag&drop into the icon
-- [x] Keep the video under 25mb (discord limitation)
+- [x] Keep the video under discord limitation
   - [x] Basic NVenc support
   - [x] If already under the limit, the file won't be compressed
-  - [x] Nitro suppport via `/nitro` flag
+  - [x] Nitro suppport via flags
 - [x] Merge audio files into one track when recorded with system audio and microphone
       split up, while keeping the original ones (with conveninant metadata)
   - [x] Works also with file with only one audio track

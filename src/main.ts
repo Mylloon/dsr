@@ -15,8 +15,6 @@ import path = require("path");
 import ffmpeg = require("ffmpeg-static");
 const ffmpegPath = `${ffmpeg}`.replace("app.asar", "app.asar.unpacked");
 
-const kill = require("terminate");
-
 let error = false;
 
 const moviesFilter = {
@@ -241,7 +239,7 @@ app.whenReady().then(() => {
 
 app.on("window-all-closed", () => {
   processes.forEach((process) => {
-    kill(process.pid);
+    process.stdin.write("q");
   });
 
   app.quit();

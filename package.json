@@ -32,7 +32,7 @@
     "forge": {
       "packagerConfig": {
         "icon": "./image/icon.ico",
-        "asar": {
+        "asarOptions": {
           "unpack": "**/node_modules/*-static/**"
         }
       },

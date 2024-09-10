@@ -21,7 +21,6 @@
     "@electron-forge/maker-zip": "^7.4",
     "ffmpeg-static": "^5.2",
     "ffprobe-static": "^3.1",
-    "terminate": "^2.8",
     "typescript": "^5.5"
   },
   "devDependencies": {

@@ -64,7 +64,7 @@ const fetchMaxSize = async () => {
     return 500;
   } else {
     // Free user
-    return 25;
+    return 10;
   }
 };
 

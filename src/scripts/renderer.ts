@@ -120,7 +120,7 @@ const main = async () => {
 
     // Compress video if needed
     if (newFile.size > maxSizeDiscord) {
-      const targetSize = maxSizeDiscord - 2; // keep some room
+      const targetSize = maxSizeDiscord - 1; // keep some room
 
       // https://trac.ffmpeg.org/wiki/Encode/H.264#twopass
       const bitrate = Math.floor((targetSize * 8388.608) / newFile.duration);

@@ -13,8 +13,8 @@ contextBridge.exposeInMainWorld("internals", {
     ipcRenderer.invoke("getFilename", filepath),
   askFiles: () => ipcRenderer.invoke("askFiles"),
   mergeAudio: (file: string) => ipcRenderer.invoke("mergeAudio", file),
-  reduceSize: (file: string, bitrate: number, nbTracks: number) =>
-    ipcRenderer.invoke("reduceSize", file, bitrate, nbTracks),
+  reduceSize: (file: string, bitrate: number, audioTracks: number[]) =>
+    ipcRenderer.invoke("reduceSize", file, bitrate, audioTracks),
   moveMetadata: (file: string) => ipcRenderer.invoke("moveMetadata", file),
   exit: () => ipcRenderer.invoke("exit"),
   confirmation: (text: string) => ipcRenderer.invoke("confirmation", text),

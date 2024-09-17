@@ -22,10 +22,12 @@ export const getVideoDuration = (file: string) => {
 };
 
 /** Return the number of audio tracks */
-export const getNumberOfAudioTracks = (file: string) => {
-  const command = `"${ffprobePath}" -v error -show_entries stream=index -select_streams a -of json "${file}"`;
+export const getNumberOfAudioTracks = (file: string): number[] => {
+  const command = `"${ffprobePath}" -v error -show_entries stream=bit_rate -select_streams a -of json "${file}"`;
   const result = child_process.execSync(command, { encoding: "utf8" });
-  return JSON.parse(result).streams.length;
+  return JSON.parse(result).streams.map(
+    (v: { bit_rate: string }) => Number(v.bit_rate) / 1000
+  );
 };
 
 /** Print an error to the console and open the dev tool panel */

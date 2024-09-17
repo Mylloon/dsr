@@ -89,9 +89,9 @@ app.whenReady().then(() => {
     const tmpFile = getNewFilename(file, "TMP_");
     let outFile;
 
-    const nbTracks = getNumberOfAudioTracks(file);
+    const audioTracks = getNumberOfAudioTracks(file);
 
-    switch (nbTracks) {
+    switch (audioTracks.length) {
       case 2:
         // Merge 2 audio
         // See: https://trac.ffmpeg.org/wiki/AudioChannelManipulation#a2stereostereo
@@ -137,7 +137,7 @@ app.whenReady().then(() => {
       title: outFile,
       size: stats.size / 1024 / 1024,
       duration,
-      nbTracks,
+      audioTracks,
     };
   };
 
@@ -145,9 +145,11 @@ app.whenReady().then(() => {
   const reduceSize = async (
     file: string,
     bitrate: number,
-    nbTracks: number
+    audioTracks: number[]
   ) => {
-    const audioBitrate = 500; // keep some room
+    const audioBitrate = Math.ceil(
+      audioTracks.reduce((sum, current) => current + sum, 0)
+    );
     let videoBitrate = bitrate - audioBitrate;
 
     const finalFile = getNewFilename(file, "Compressed - ");
@@ -156,7 +158,7 @@ app.whenReady().then(() => {
     const nul = process.platform === "win32" ? "NUL" : "/dev/null";
 
     // Mapping of tracks for FFMPEG, adding 1 for the video stream
-    const mappingTracks = Array(nbTracks + 1)
+    const mappingTracks = Array(audioTracks.length + 1)
       .fill("-map 0:")
       .map((str, index) => {
         return str + index;
@@ -173,7 +175,7 @@ app.whenReady().then(() => {
       hwAcc = "-hwaccel cuda";
 
       // Increase video bitrate
-      videoBitrate = Math.floor(videoBitrate * 1.7);
+      videoBitrate = Math.floor(videoBitrate);
     }
 
     // Compress the video
@@ -229,8 +231,8 @@ app.whenReady().then(() => {
   ipcMain.handle("mergeAudio", (_, file: string) => mergeAudio(file));
   ipcMain.handle(
     "reduceSize",
-    (_, file: string, bitrate: number, nbTracks: number) =>
-      reduceSize(file, bitrate, nbTracks)
+    (_, file: string, bitrate: number, audioTracks: number[]) =>
+      reduceSize(file, bitrate, audioTracks)
   );
   ipcMain.handle("moveMetadata", (_, file: string) => moveMetadata(file));
   ipcMain.handle("exit", () => (error ? {} : app.quit()));

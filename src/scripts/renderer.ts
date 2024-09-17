@@ -11,12 +11,12 @@ let internals: {
     title: string;
     duration: number;
     size: number;
-    nbTracks: number;
+    audioTracks: number[];
   }>;
   reduceSize: (
     file: string,
     bitrate: number,
-    nbTracks: number
+    audioTracks: number[]
   ) => Promise<string>;
   moveMetadata: (file: string) => Promise<string>;
   confirmation: (text: string) => Promise<void>;
@@ -135,7 +135,7 @@ const main = async () => {
       finalTitle = await internals.reduceSize(
         newFile.title,
         bitrate,
-        newFile.nbTracks
+        newFile.audioTracks
       );
     } else {
       updateMessage(`\nPréparation pour le partage...`, true, Mode.Append);

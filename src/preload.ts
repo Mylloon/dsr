@@ -15,7 +15,8 @@ contextBridge.exposeInMainWorld("internals", {
   mergeAudio: (file: string) => ipcRenderer.invoke("mergeAudio", file),
   reduceSize: (file: string, bitrate: number, audioTracks: number[]) =>
     ipcRenderer.invoke("reduceSize", file, bitrate, audioTracks),
-  moveMetadata: (file: string) => ipcRenderer.invoke("moveMetadata", file),
+  moveMetadata: (file: string, nbTracks: number) =>
+    ipcRenderer.invoke("moveMetadata", file, nbTracks),
   exit: () => ipcRenderer.invoke("exit"),
   confirmation: (text: string) => ipcRenderer.invoke("confirmation", text),
 });

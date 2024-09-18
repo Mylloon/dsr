@@ -18,7 +18,7 @@ let internals: {
     bitrate: number,
     audioTracks: number[]
   ) => Promise<string>;
-  moveMetadata: (file: string) => Promise<string>;
+  moveMetadata: (file: string, nbTracks: number) => Promise<string>;
   confirmation: (text: string) => Promise<void>;
 };
 
@@ -141,7 +141,10 @@ const main = async () => {
       updateMessage(`\nPréparation pour le partage...`, true, Mode.Append);
 
       // Move the metadata to make it playable before everything is downloaded
-      finalTitle = await internals.moveMetadata(newFile.title);
+      finalTitle = await internals.moveMetadata(
+        newFile.title,
+        newFile.audioTracks.length
+      );
     }
 
     // Append title to the list of processed files

@@ -216,7 +216,7 @@ app.whenReady().then(() => {
   };
 
   /** Move metadata at the begenning of the file */
-  const moveMetadata = async (file: string) => {
+  const moveMetadata = async (file: string, nbTracks: number) => {
     const finalFile = getNewFilename(file, "Broadcastable - ");
 
     // Optimize for streaming
@@ -225,6 +225,7 @@ app.whenReady().then(() => {
        -i "${file}" \
        -map 0 -codec copy \
        ${shareOpt} \
+       ${nbTracks === 3 ? metadataAudio : ""} \
        "${finalFile}"`
     ).catch((e) => registerError(win, e));
 
@@ -245,7 +246,9 @@ app.whenReady().then(() => {
     (_, file: string, bitrate: number, audioTracks: number[]) =>
       reduceSize(file, bitrate, audioTracks)
   );
-  ipcMain.handle("moveMetadata", (_, file: string) => moveMetadata(file));
+  ipcMain.handle("moveMetadata", (_, file: string, nbTracks: number) =>
+    moveMetadata(file, nbTracks)
+  );
   ipcMain.handle("exit", () => (error ? {} : app.quit()));
   ipcMain.handle("confirmation", (_, text: string) => confirmation(text));
 });

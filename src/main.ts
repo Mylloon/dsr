@@ -22,6 +22,7 @@ const moviesFilter = {
   extensions: ["mp4", "mkv"],
 };
 
+const metadataAudioSize = 3;
 const metadataAudio = `-metadata:s:a:0 title="System sounds and microphone" \
                        -metadata:s:a:1 title="System sounds" \
                        -metadata:s:a:2 title="Microphone"`;
@@ -201,7 +202,7 @@ app.whenReady().then(() => {
        -c:v ${codec} -b:v ${videoBitrate}k -pass 2 -c:a copy \
        ${mappingTracks} -f mp4 \
        -profile:v main \
-       ${audioTracks.length === 3 ? metadataAudio : ""} \
+       ${audioTracks.length === metadataAudioSize ? metadataAudio : ""} \
        ${shareOpt} \
        "${finalFile}"`
     ).catch((e) => registerError(win, e));
@@ -225,7 +226,7 @@ app.whenReady().then(() => {
        -i "${file}" \
        -map 0 -codec copy \
        ${shareOpt} \
-       ${nbTracks === 3 ? metadataAudio : ""} \
+       ${nbTracks === metadataAudioSize ? metadataAudio : ""} \
        "${finalFile}"`
     ).catch((e) => registerError(win, e));
 

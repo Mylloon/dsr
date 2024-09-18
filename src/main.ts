@@ -172,8 +172,14 @@ app.whenReady().then(() => {
 
     const argv = process.argv;
     if (argv.includes("/nvenc")) {
-      // Use NVenc
+      // Use NVenc H.264
       codec = "h264_nvenc";
+      hwAcc = "-hwaccel cuda";
+    }
+
+    if (argv.includes("/nvenc2")) {
+      // Use NVenc H.265
+      codec = "hevc_nvenc";
       hwAcc = "-hwaccel cuda";
     }
 

@@ -89,7 +89,7 @@ app.whenReady().then(() => {
     const tmpFile = getNewFilename(file, "TMP_");
     let outFile;
 
-    const audioTracks = getNumberOfAudioTracks(file);
+    let audioTracks = getNumberOfAudioTracks(file);
 
     switch (audioTracks.length) {
       case 2:
@@ -119,6 +119,8 @@ app.whenReady().then(() => {
 
         // Delete the temporary video file
         deleteFile(tmpFile);
+
+        audioTracks = getNumberOfAudioTracks(outFile);
 
         break;
       default:

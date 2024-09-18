@@ -175,9 +175,11 @@ app.whenReady().then(() => {
       // Use NVenc
       codec = "h264_nvenc";
       hwAcc = "-hwaccel cuda";
+    }
 
-      // Increase video bitrate
-      videoBitrate = Math.floor(videoBitrate);
+    if (argv.includes("/h265")) {
+      // Use H.265 encoder
+      codec = "libx265";
     }
 
     // Compress the video
@@ -192,7 +194,8 @@ app.whenReady().then(() => {
        -i "${file}" \
        -c:v ${codec} -b:v ${videoBitrate}k -pass 2 -c:a copy \
        ${mappingTracks} -f mp4 \
-       ${metadataAudio} \
+       -profile:v main \
+       ${audioTracks.length === 3 ? metadataAudio : ""} \
        ${shareOpt} \
        "${finalFile}"`
     ).catch((e) => registerError(win, e));

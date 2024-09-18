@@ -17,7 +17,9 @@ Tool for sharing video to Discord.
 
 > - If you have Discord Nitro: add `/nitro` flag when running DSR.
 > - If you have Discord Nitro Basic: add `/nitrobasic` flag when running DSR.
+
 > - If you have an NVidia GPU with NVenc: add `/nvenc` flag when running DSR.
+> - H.265 encoder is available : add `/h265` flag when running DSR (slower).
 
 ## More info
 
@@ -25,7 +27,7 @@ Tool for sharing video to Discord.
   - [x] Support drag&drop into the icon
 - [x] Keep the video under discord limitation
   - [x] If already under the limit, the file won't be compressed
-  - [x] Basic NVenc support
+  - [x] Basic NVenc (H.264) support
   - [x] Nitro suppport via flags
 - [x] Merge 2 audio files into one track when recorded with system audio and microphone
       split up, while keeping the original ones (with conveniant metadata)

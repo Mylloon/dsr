@@ -103,6 +103,7 @@ const main = async () => {
   updateMessage("Récupération des fichiers...");
   const files = await getFiles();
   let processedFiles = "";
+  let numberOfUncompressableFiles = 0;
 
   // Iterate over all the retrieved files
   for (const [idx, file] of files.entries()) {
@@ -148,14 +149,26 @@ const main = async () => {
     }
 
     // Append title to the list of processed files
-    processedFiles += `\n- ${finalTitle}`;
-    updateMessage(`Fichier ${counter} traités.`);
+    if (finalTitle.length > 0) {
+      processedFiles += `\n- ${finalTitle}`;
+      updateMessage(`Fichier ${counter} traités.`);
+    } else {
+      processedFiles += `\n- ${file} [incompressable]`;
+      updateMessage(`Fichier ${counter} trop large pour être compressé.`);
+      numberOfUncompressableFiles++;
+    }
+  }
+
+  let errorMessage = "";
+  if (numberOfUncompressableFiles > 0) {
+    errorMessage += `\nNombre de fichier incompressable : ${numberOfUncompressableFiles}.`;
   }
 
   // Send confirmation to the user that we're done
   await internals.confirmation(
-    `${files.length} fichiers traités : ${processedFiles}`
+    `${files.length} fichiers traités : ${processedFiles}` + errorMessage
   );
+
   await internals.exit();
 };
 

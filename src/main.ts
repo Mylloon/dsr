@@ -144,7 +144,9 @@ app.whenReady().then(() => {
     };
   };
 
-  /** Reduce size of a file */
+  /** Reduce size of a file
+   * Returns an empty string in case of failing
+   */
   const reduceSize = async (
     file: string,
     bitrate: number,
@@ -153,46 +155,48 @@ app.whenReady().then(() => {
     const audioBitrate = Math.ceil(
       audioTracks.reduce((sum, current) => current + sum, 0)
     );
-    let videoBitrate = bitrate - audioBitrate;
+    const videoBitrate = bitrate - audioBitrate;
+    let finalFile;
 
-    const finalFile = getNewFilename(file, "Compressed - ");
+    if (videoBitrate > 0) {
+      finalFile = getNewFilename(file, "Compressed - ");
 
-    // Trash the output, depends on the platform
-    const nul = process.platform === "win32" ? "NUL" : "/dev/null";
+      // Trash the output, depends on the platform
+      const nul = process.platform === "win32" ? "NUL" : "/dev/null";
 
-    // Mapping of tracks for FFMPEG, adding 1 for the video stream
-    const mappingTracks = Array(audioTracks.length + 1)
-      .fill("-map 0:")
-      .map((str, index) => {
-        return str + index;
-      })
-      .join(" ");
+      // Mapping of tracks for FFMPEG, adding 1 for the video stream
+      const mappingTracks = Array(audioTracks.length + 1)
+        .fill("-map 0:")
+        .map((str, index) => {
+          return str + index;
+        })
+        .join(" ");
 
-    let codec = "libx264";
-    let hwAcc = "";
+      let codec = "libx264";
+      let hwAcc = "";
 
-    const argv = process.argv;
-    if (argv.includes("/nvenc_h264")) {
-      // Use NVenc H.264
-      codec = "h264_nvenc";
-      hwAcc = "-hwaccel cuda";
-    }
+      const argv = process.argv;
+      if (argv.includes("/nvenc_h264")) {
+        // Use NVenc H.264
+        codec = "h264_nvenc";
+        hwAcc = "-hwaccel cuda";
+      }
 
-    if (argv.includes("/nvenc_h265")) {
-      // Use NVenc H.265
-      codec = "hevc_nvenc";
-      hwAcc = "-hwaccel cuda";
-    }
+      if (argv.includes("/nvenc_h265")) {
+        // Use NVenc H.265
+        codec = "hevc_nvenc";
+        hwAcc = "-hwaccel cuda";
+      }
 
-    if (argv.includes("/h265")) {
-      // Use H.265 encoder
-      codec = "libx265";
-    }
+      if (argv.includes("/h265")) {
+        // Use H.265 encoder
+        codec = "libx265";
+      }
 
-    // Compress the video
-    // Add metadata to audio's track
-    await execute(
-      `"${ffmpegPath}" -y ${hwAcc} \
+      // Compress the video
+      // Add metadata to audio's track
+      await execute(
+        `"${ffmpegPath}" -y ${hwAcc} \
        -i "${file}" \
        -c:v ${codec} -b:v ${videoBitrate}k -pass 1 -an -f mp4 \
        ${nul} \
@@ -205,13 +209,16 @@ app.whenReady().then(() => {
        ${audioTracks.length === metadataAudioSize ? metadataAudio : ""} \
        ${shareOpt} \
        "${finalFile}"`
-    ).catch((e) => registerError(win, e));
+      ).catch((e) => registerError(win, e));
+
+      // Delete the 2 pass temporary files
+      deleteTwoPassFiles(process.cwd());
+    } else {
+      finalFile = "";
+    }
 
     // Delete the old video file
     deleteFile(file);
-
-    // Delete the 2 pass temporary files
-    deleteTwoPassFiles(process.cwd());
 
     return finalFile;
   };

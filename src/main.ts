@@ -153,7 +153,7 @@ app.whenReady().then(() => {
     audioTracks: number[]
   ) => {
     const audioBitrate = Math.ceil(
-      audioTracks.reduce((sum, current) => current + sum, 0)
+      audioTracks.reduce((sum, current) => current + sum, 50) // initial value > 0 for extra room
     );
     const videoBitrate = bitrate - audioBitrate;
     let finalFile;

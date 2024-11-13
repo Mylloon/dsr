@@ -182,10 +182,22 @@ app.whenReady().then(() => {
         hwAcc = "-hwaccel cuda";
       }
 
+      if (argv.includes("/amd_h264")) {
+        // Use AMF H.264
+        codec = "h264_amf";
+        hwAcc = "-hwaccel d3d11va";
+      }
+
       if (argv.includes("/nvenc_h265")) {
         // Use NVenc H.265
         codec = "hevc_nvenc";
         hwAcc = "-hwaccel cuda";
+      }
+
+      if (argv.includes("/amd_h265")) {
+        // Use AMF H.265
+        codec = "hevc_amf";
+        hwAcc = "-hwaccel d3d11va";
       }
 
       if (argv.includes("/h265")) {

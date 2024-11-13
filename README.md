@@ -19,16 +19,19 @@ Tool for sharing video to Discord.
 
 You can add thoses flags in the `Target` field of your Windows shortcut.
 
-|               |                                                       |
-| ------------- | ----------------------------------------------------- |
-| `/nitro`      | Increase the file limit to 500Mo                      |
-| `/nitrobasic` | Increase the file limit to 50Mo                       |
-|               |                                                       |
-| `/nvenc_h264` | Enable NVenc with H.264 encoder (NVidia GPU required) |
-| `/nvenc_h265` | Enable NVenc with H.265 encoder (NVidia GPU required) |
-| `/h265`       | Enable the H.265 CPU encoder (slow compression)       |
+|               |                                                        |
+| ------------- | ------------------------------------------------------ |
+| `/nitro`      | Increase the file limit to 500Mo                       |
+| `/nitrobasic` | Increase the file limit to 50Mo                        |
+|               |                                                        |
+| `/nvenc_h264` | Enable NVenc with H.264 encoder (NVidia GPU required)  |
+| `/nvenc_h265` | Enable NVenc with H.265 encoder (NVidia GPU required)  |
+| `/amd_h264`   | Enable AMF using DX11 with H.264 encoder (for AMD GPU) |
+| `/amd_h265`   | Enable AMF using DX11 with H.265 encoder (for AMD GPU) |
+| `/h265`       | Enable the H.265 CPU encoder (slow compression)        |
 
-> NVenc support is experimental, but faster than CPU counterparts.
+> NVidia and AMD hardware accelerators support is experimental, but faster
+> than CPU counterparts.
 
 ## More info
 
@@ -38,6 +41,7 @@ You can add thoses flags in the `Target` field of your Windows shortcut.
   - [x] Defaults to H.264 CPU encoder
   - [x] If already under the limit, the file won't be compressed
   - [x] NVenc support
+  - [x] AMD cards acceleration support
   - [x] Nitro suppport
 - [x] Merge 2 audio files into one track when recorded with system audio and microphone
       split up, while keeping the original ones (with conveniant metadata)

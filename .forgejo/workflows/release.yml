@@ -7,22 +7,35 @@ on:
 
 jobs:
   build:
+    runs-on: docker
+    container:
+      image: node
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
-          npm install --platform=win32 &&
           apt-get update &&
           apt-get install -y zip
 
-      - name: Build the app
-        run: npm run make -- --platform=win32
+      - name: Build the app for Windows
+        run: |
+          npm install --platform=win32 &&
+          npm run make -- --platform=win32
+
+      - name: Clear the node packages
+        run: rm -rf node_modules/ package-lock.json
+
+      - name: Build the app for Linux
+        run: |
+          npm install --platform=linux &&
+          npm run make -- --platform=linux
 
       - name: Create release
         uses: akkuman/gitea-release-action@v1
         with:
           token: ${{ secrets.TOKEN }}
-          files: out/make/zip/win32/x64/dsr-win32-x64-${{ github.ref_name }}.zip
+          files: out/make/zip/**/*.zip
           draft: true

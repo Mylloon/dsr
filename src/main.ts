@@ -40,7 +40,7 @@ const createWindow = () => {
   const win = new BrowserWindow({
     width: 600,
     height: 340,
-    icon: "./image/icon.ico",
+    icon: "./image/icon." + (process.platform === "win32" ? "ico" : "png"),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),

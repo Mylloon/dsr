@@ -8,6 +8,7 @@ ipcRenderer.on("error", (_, err) => {
 /* Context bridge */
 contextBridge.exposeInMainWorld("internals", {
   argv: () => ipcRenderer.invoke("argv"),
+  cwd: () => ipcRenderer.invoke("cwd"),
   allowedExtensions: () => ipcRenderer.invoke("allowedExtensions"),
   getFilename: (filepath: string) => ipcRenderer.invoke("getFilename", filepath),
   askFiles: () => ipcRenderer.invoke("askFiles"),

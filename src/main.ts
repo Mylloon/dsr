@@ -253,6 +253,7 @@ app.whenReady().then(() => {
 
   /* Context bridge */
   ipcMain.handle("argv", () => process.argv);
+  ipcMain.handle("cwd", process.cwd);
   ipcMain.handle("allowedExtensions", () => moviesFilter);
   ipcMain.handle("getFilename", (_, filepath: string) => getFilename(filepath));
   ipcMain.handle("askFiles", () => askFiles());

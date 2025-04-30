@@ -1,6 +1,7 @@
 /** Context bridge types */
 let internals: {
   argv: () => Promise<string[]>;
+  cwd: () => Promise<string>;
   allowedExtensions: () => Promise<{
     extensions: string[];
   }>;
@@ -21,7 +22,16 @@ let internals: {
 /** Search for files */
 const getFiles = async () => {
   const allowedExtensions = (await internals.allowedExtensions()).extensions;
-  const argvFiles = (await internals.argv()).slice(1).filter((element) => !element.startsWith("/"));
+  const currentDir = await internals.cwd();
+  const argvFiles = (await internals.argv())
+    .slice(1)
+    .filter(async (element) => {
+      if (element.startsWith("/")) {
+        return element.startsWith(currentDir);
+      }
+      return true;
+    })
+    .map((element) => element.split("/").pop());
 
   if (argvFiles.length > 0) {
     const files = argvFiles;

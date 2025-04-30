@@ -35,12 +35,14 @@ const registerError = (win: BrowserWindow, err: string) => {
   printAndDevTool(win, err);
 };
 
+const onWindows = process.platform === "win32";
+
 /** Create a new window */
 const createWindow = () => {
   const win = new BrowserWindow({
     width: 600,
     height: 340,
-    icon: "./image/icon." + (process.platform === "win32" ? "ico" : "png"),
+    icon: "./image/icon." + (onWindows ? "ico" : "png"),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -53,7 +55,7 @@ const createWindow = () => {
 };
 
 // For notification on Windows
-if (process.platform === "win32") {
+if (onWindows) {
   app.setAppUserModelId(app.name);
 }
 
@@ -158,7 +160,7 @@ app.whenReady().then(() => {
       finalFile = getNewFilename(file, "Compressed - ");
 
       // Trash the output, depends on the platform
-      const nul = process.platform === "win32" ? "NUL" : "/dev/null";
+      const nul = onWindows ? "NUL" : "/dev/null";
 
       // Mapping of tracks for FFMPEG, adding 1 for the video stream
       const mappingTracks = Array(audioTracks.length + 1)
@@ -175,25 +177,25 @@ app.whenReady().then(() => {
       if (argv.includes("/nvenc_h264")) {
         // Use NVenc H.264
         codec = "h264_nvenc";
-        hwAcc = "-hwaccel cuda";
+        hwAcc = onWindows ? "-hwaccel cuda" : "-hwaccel cuda -hwaccel_output_format cuda";
       }
 
       if (argv.includes("/amd_h264")) {
         // Use AMF H.264
-        codec = "h264_amf";
-        hwAcc = "-hwaccel d3d11va";
+        codec = onWindows ? "h264_amf" : "h264_vaapi";
+        hwAcc = onWindows ? "-hwaccel d3d11va" : "-hwaccel vaapi -hwaccel_output_format vaapi";
       }
 
       if (argv.includes("/nvenc_h265")) {
         // Use NVenc H.265
         codec = "hevc_nvenc";
-        hwAcc = "-hwaccel cuda";
+        hwAcc = onWindows ? "-hwaccel cuda" : "-hwaccel cuda -hwaccel_output_format cuda";
       }
 
       if (argv.includes("/amd_h265")) {
         // Use AMF H.265
-        codec = "hevc_amf";
-        hwAcc = "-hwaccel d3d11va";
+        codec = onWindows ? "hevc_amf" : "hevc_vaapi";
+        hwAcc = onWindows ? "-hwaccel d3d11va" : "-hwaccel vaapi -hwaccel_output_format vaapi";
       }
 
       if (argv.includes("/h265")) {

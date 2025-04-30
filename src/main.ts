@@ -101,7 +101,7 @@ app.whenReady().then(() => {
            -i "${file}" \
            -filter_complex "[0:a]amerge=inputs=2[a]" -ac 2 -map 0:v -map "[a]" \
            -c:v copy \
-           "${tmpFile}"`
+           "${tmpFile}"`,
         );
 
         outFile = getNewFilename(file, "(merged audio) ");
@@ -115,7 +115,7 @@ app.whenReady().then(() => {
          -map 0 -map 1:a -c:v copy \
          -disposition:a 0 -disposition:a:0 default \
          ${metadataAudio} \
-         "${outFile}"`
+         "${outFile}"`,
         ).catch((e) => registerError(win, e));
 
         // Delete the temporary video file
@@ -147,13 +147,9 @@ app.whenReady().then(() => {
   /** Reduce size of a file
    * Returns an empty string in case of failing
    */
-  const reduceSize = async (
-    file: string,
-    bitrate: number,
-    audioTracks: number[]
-  ) => {
+  const reduceSize = async (file: string, bitrate: number, audioTracks: number[]) => {
     const audioBitrate = Math.ceil(
-      audioTracks.reduce((sum, current) => current + sum, 50) // initial value > 0 for extra room
+      audioTracks.reduce((sum, current) => current + sum, 50), // initial value > 0 for extra room
     );
     const videoBitrate = bitrate - audioBitrate;
     let finalFile;
@@ -220,7 +216,7 @@ app.whenReady().then(() => {
        -profile:v main \
        ${audioTracks.length === metadataAudioSize ? metadataAudio : ""} \
        ${shareOpt} \
-       "${finalFile}"`
+       "${finalFile}"`,
       ).catch((e) => registerError(win, e));
 
       // Delete the 2 pass temporary files
@@ -246,7 +242,7 @@ app.whenReady().then(() => {
        -map 0 -codec copy \
        ${shareOpt} \
        ${nbTracks === metadataAudioSize ? metadataAudio : ""} \
-       "${finalFile}"`
+       "${finalFile}"`,
     ).catch((e) => registerError(win, e));
 
     // Delete the old video file
@@ -261,13 +257,11 @@ app.whenReady().then(() => {
   ipcMain.handle("getFilename", (_, filepath: string) => getFilename(filepath));
   ipcMain.handle("askFiles", () => askFiles());
   ipcMain.handle("mergeAudio", (_, file: string) => mergeAudio(file));
-  ipcMain.handle(
-    "reduceSize",
-    (_, file: string, bitrate: number, audioTracks: number[]) =>
-      reduceSize(file, bitrate, audioTracks)
+  ipcMain.handle("reduceSize", (_, file: string, bitrate: number, audioTracks: number[]) =>
+    reduceSize(file, bitrate, audioTracks),
   );
   ipcMain.handle("moveMetadata", (_, file: string, nbTracks: number) =>
-    moveMetadata(file, nbTracks)
+    moveMetadata(file, nbTracks),
   );
   ipcMain.handle("exit", () => (error ? {} : app.quit()));
   ipcMain.handle("confirmation", (_, text: string) => confirmation(text));

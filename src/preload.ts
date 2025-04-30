@@ -9,8 +9,7 @@ ipcRenderer.on("error", (_, err) => {
 contextBridge.exposeInMainWorld("internals", {
   argv: () => ipcRenderer.invoke("argv"),
   allowedExtensions: () => ipcRenderer.invoke("allowedExtensions"),
-  getFilename: (filepath: string) =>
-    ipcRenderer.invoke("getFilename", filepath),
+  getFilename: (filepath: string) => ipcRenderer.invoke("getFilename", filepath),
   askFiles: () => ipcRenderer.invoke("askFiles"),
   mergeAudio: (file: string) => ipcRenderer.invoke("mergeAudio", file),
   reduceSize: (file: string, bitrate: number, audioTracks: number[]) =>

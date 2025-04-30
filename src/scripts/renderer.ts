@@ -27,6 +27,7 @@ const getFiles = async () => {
     .slice(1)
     .filter((element) => {
       if (element.startsWith("/")) {
+        // Slash either fullpath files, or commands args
         return element.startsWith(currentDir);
       }
       return true;

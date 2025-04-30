@@ -25,7 +25,7 @@ const getFiles = async () => {
   const currentDir = await internals.cwd();
   const argvFiles = (await internals.argv())
     .slice(1)
-    .filter(async (element) => {
+    .filter((element) => {
       if (element.startsWith("/")) {
         return element.startsWith(currentDir);
       }

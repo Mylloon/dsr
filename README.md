@@ -2,8 +2,6 @@
 
 Tool for sharing video to Discord.
 
-> This tool was primarily made for video captured by NVidia Shadowplay.
-
 ## Download/Install/Update
 
 2 choices :
@@ -14,6 +12,10 @@ Tool for sharing video to Discord.
   ```powershell
   irm https://git.mylloon.fr/Anri/dsr/raw/branch/main/install.ps1 | iex
   ```
+
+### Linux
+
+Install from AUR: [dsr](https://aur.archlinux.org/packages/dsr)
 
 ## Available flags
 

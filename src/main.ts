@@ -16,9 +16,7 @@ import ffmpeg = require("ffmpeg-static");
 let ffmpegPath;
 try {
   ffmpegPath = "ffmpeg";
-  require("child_process").execSync(`${ffmpegPath} -version`, {
-    stdio: "ignore",
-  });
+  require("child_process").execSync(`${ffmpegPath} -version`, { stdio: "ignore" });
 } catch {
   ffmpegPath = `${ffmpeg}`.replace("app.asar", "app.asar.unpacked");
 }

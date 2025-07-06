@@ -222,7 +222,7 @@ app.whenReady().then(() => {
      && \
      "${ffmpegPath}" -y ${hwAcc} \
      -i "${file}" \
-     -c:v ${codec} -b:v ${videoBitrate}k -pass 2 -c:a aac -b:a ${audioBitratePerTrack} \
+     -c:v ${codec} -b:v ${videoBitrate}k -pass 2 -c:a aac -b:a ${audioBitratePerTrack}k \
      ${mappingTracks} -f mp4 \
      -profile:v main \
      ${audioTracks.length === metadataAudioSize ? metadataAudio : ""} \

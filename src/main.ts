@@ -156,9 +156,10 @@ app.whenReady().then(() => {
    * Returns an empty string in case of failing
    */
   const reduceSize = async (file: string, bitrate: number, audioTracks: number[]) => {
-    const audioBitrate = Math.ceil(
-      audioTracks.reduce((sum, current) => current + sum, 50), // initial value > 0 for extra room
-    );
+    const audioBitratePerTrack = 128; // kbps
+
+    // Calculate audio bitrate
+    const audioBitrate = audioTracks.length * audioBitratePerTrack;
     const videoBitrate = bitrate - audioBitrate;
     let finalFile;
 
@@ -209,22 +210,22 @@ app.whenReady().then(() => {
         codec = "libx265";
       }
 
-      // Compress the video
+      // Compress the video with AAC audio compression
       // Add metadata to audio's track
       await execute(
         `"${ffmpegPath}" -y ${hwAcc} \
-       -i "${file}" \
-       -c:v ${codec} -b:v ${videoBitrate}k -pass 1 -an -f mp4 \
-       ${nul} \
-       && \
-       "${ffmpegPath}" -y ${hwAcc} \
-       -i "${file}" \
-       -c:v ${codec} -b:v ${videoBitrate}k -pass 2 -c:a copy \
-       ${mappingTracks} -f mp4 \
-       -profile:v main \
-       ${audioTracks.length === metadataAudioSize ? metadataAudio : ""} \
-       ${shareOpt} \
-       "${finalFile}"`,
+     -i "${file}" \
+     -c:v ${codec} -b:v ${videoBitrate}k -pass 1 -an -f mp4 \
+     ${nul} \
+     && \
+     "${ffmpegPath}" -y ${hwAcc} \
+     -i "${file}" \
+     -c:v ${codec} -b:v ${videoBitrate}k -pass 2 -c:a aac -b:a ${audioBitratePerTrack} \
+     ${mappingTracks} -f mp4 \
+     -profile:v main \
+     ${audioTracks.length === metadataAudioSize ? metadataAudio : ""} \
+     ${shareOpt} \
+     "${finalFile}"`
       ).catch((e) => registerError(win, e));
 
       // Delete the 2 pass temporary files

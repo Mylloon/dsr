@@ -16,7 +16,9 @@ import ffmpeg = require("ffmpeg-static");
 let ffmpegPath;
 try {
   ffmpegPath = "ffmpeg";
-  require("child_process").execSync(`${ffmpegPath} -version`, { stdio: "ignore" });
+  require("child_process").execSync(`${ffmpegPath} -version`, {
+    stdio: "ignore",
+  });
 } catch {
   ffmpegPath = `${ffmpeg}`.replace("app.asar", "app.asar.unpacked");
 }
@@ -225,7 +227,7 @@ app.whenReady().then(() => {
      -profile:v main \
      ${audioTracks.length === metadataAudioSize ? metadataAudio : ""} \
      ${shareOpt} \
-     "${finalFile}"`
+     "${finalFile}"`,
       ).catch((e) => registerError(win, e));
 
       // Delete the 2 pass temporary files

@@ -94,13 +94,45 @@ app.whenReady().then(() => {
   /** Get filename of a path */
   const getFilename = (filepath: string) => path.parse(filepath).base;
 
+  /** Check if file is already MP4 */
+  const isMP4 = (filepath: string) => {
+    const ext = path.extname(filepath).toLowerCase();
+    return ext === ".mp4";
+  };
+
+  /** Convert any video file to MP4 format */
+  const convertToMP4 = async (file: string) => {
+    if (isMP4(file)) {
+      // Already MP4, just return the original file
+      return file;
+    }
+
+    const parsedPath = path.parse(file);
+    const mp4File = path.join(parsedPath.dir, parsedPath.name + ".mp4");
+
+    // Convert to MP4 with H.264 video and AAC audio
+    await execute(`"${ffmpegPath}" -i "${file}" -codec copy "${mp4File}"`).catch((e) =>
+      registerError(win, e),
+    );
+
+    // Delete the original file if conversion was successful
+    if (!error) {
+      deleteFile(file);
+    }
+
+    return mp4File;
+  };
+
   /** Merge all audios track of a video into one
    *  In case video doesn't have exactly two audio streams, silently pass */
   const mergeAudio = async (file: string) => {
-    const tmpFile = getNewFilename(file, "TMP_");
+    // First, ensure the file is MP4
+    const mp4File = await convertToMP4(file);
+
+    const tmpFile = getNewFilename(mp4File, "TMP_");
     let outFile;
 
-    let audioTracks = getNumberOfAudioTracks(file);
+    let audioTracks = getNumberOfAudioTracks(mp4File);
 
     switch (audioTracks.length) {
       case 2:
@@ -108,20 +140,20 @@ app.whenReady().then(() => {
         // See: https://trac.ffmpeg.org/wiki/AudioChannelManipulation#a2stereostereo
         await execute(
           `"${ffmpegPath}" -y \
-           -i "${file}" \
+           -i "${mp4File}" \
            -filter_complex "[0:a]amerge=inputs=2[a]" -ac 2 -map 0:v -map "[a]" \
            -c:v copy \
            "${tmpFile}"`,
         );
 
-        outFile = getNewFilename(file, "(merged audio) ");
+        outFile = getNewFilename(mp4File, "(merged audio) ");
 
         // Add merged audio as first position to original video and make it default
         // About disposition: https://ffmpeg.org/ffmpeg.html#Main-options
         // Also rename all tracks accordingly to what they are
         await execute(
           `"${ffmpegPath}" -y \
-         -i "${tmpFile}" -i "${file}" \
+         -i "${tmpFile}" -i "${mp4File}" \
          -map 0 -map 1:a -c:v copy \
          -disposition:a 0 -disposition:a:0 default \
          ${metadataAudio} \
@@ -136,10 +168,10 @@ app.whenReady().then(() => {
         break;
       default:
         // Other cases: no merge needed
-        outFile = getNewFilename(file, "(nomerge) ");
+        outFile = getNewFilename(mp4File, "(nomerge) ");
 
         // Do a copy
-        copyFileSync(file, outFile);
+        copyFileSync(mp4File, outFile);
         break;
     }
 
@@ -268,6 +300,7 @@ app.whenReady().then(() => {
   ipcMain.handle("allowedExtensions", () => moviesFilter);
   ipcMain.handle("getFilename", (_, filepath: string) => getFilename(filepath));
   ipcMain.handle("askFiles", () => askFiles());
+  ipcMain.handle("convertToMP4", (_, file: string) => convertToMP4(file));
   ipcMain.handle("mergeAudio", (_, file: string) => mergeAudio(file));
   ipcMain.handle("reduceSize", (_, file: string, bitrate: number, audioTracks: number[]) =>
     reduceSize(file, bitrate, audioTracks),

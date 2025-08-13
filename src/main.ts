@@ -174,9 +174,7 @@ app.whenReady().then(() => {
       // Mapping of tracks for FFMPEG, adding 1 for the video stream
       const mappingTracks = Array(audioTracks.length + 1)
         .fill("-map 0:")
-        .map((str, index) => {
-          return str + index;
-        })
+        .map((str, index) => str + index)
         .join(" ");
 
       let codec = "libx264";

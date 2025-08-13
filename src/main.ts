@@ -157,12 +157,17 @@ app.whenReady().then(() => {
   /** Reduce size of a file
    * Returns an empty string in case of failing
    */
-  const reduceSize = async (file: string, bitrate: number, audioTracks: number[]) => {
+  const reduceSize = async (
+    file: string,
+    bitrate: number,
+    audioTracks: number[],
+  ) => {
     const audioBitratePerTrack = 128; // kbps
     const mainAudioBitrate = 192; // kbps for the first track
 
     // Calculate total audio bitrate
-    const audioBitrate = mainAudioBitrate + (audioTracks.length - 1) * audioBitratePerTrack;
+    const audioBitrate =
+      mainAudioBitrate + (audioTracks.length - 1) * audioBitratePerTrack;
     const videoBitrate = bitrate - audioBitrate;
     let finalFile;
 
@@ -185,25 +190,33 @@ app.whenReady().then(() => {
       if (argv.includes("/nvenc_h264")) {
         // Use NVenc H.264
         codec = "h264_nvenc";
-        hwAcc = onWindows ? "-hwaccel cuda" : "-hwaccel cuda -hwaccel_output_format cuda";
+        hwAcc = onWindows
+          ? "-hwaccel cuda"
+          : "-hwaccel cuda -hwaccel_output_format cuda";
       }
 
       if (argv.includes("/amd_h264")) {
         // Use AMF H.264
         codec = onWindows ? "h264_amf" : "h264_vaapi";
-        hwAcc = onWindows ? "-hwaccel d3d11va" : "-hwaccel vaapi -hwaccel_output_format vaapi";
+        hwAcc = onWindows
+          ? "-hwaccel d3d11va"
+          : "-hwaccel vaapi -hwaccel_output_format vaapi";
       }
 
       if (argv.includes("/nvenc_h265")) {
         // Use NVenc H.265
         codec = "hevc_nvenc";
-        hwAcc = onWindows ? "-hwaccel cuda" : "-hwaccel cuda -hwaccel_output_format cuda";
+        hwAcc = onWindows
+          ? "-hwaccel cuda"
+          : "-hwaccel cuda -hwaccel_output_format cuda";
       }
 
       if (argv.includes("/amd_h265")) {
         // Use AMF H.265
         codec = onWindows ? "hevc_amf" : "hevc_vaapi";
-        hwAcc = onWindows ? "-hwaccel d3d11va" : "-hwaccel vaapi -hwaccel_output_format vaapi";
+        hwAcc = onWindows
+          ? "-hwaccel d3d11va"
+          : "-hwaccel vaapi -hwaccel_output_format vaapi";
       }
 
       if (argv.includes("/h265")) {
@@ -213,7 +226,10 @@ app.whenReady().then(() => {
 
       // Build per-track audio bitrate
       const audioBitrateArgs = audioTracks
-        .map((_, i) => `-b:a:${i} ${i === 0 ? mainAudioBitrate : audioBitratePerTrack}k`)
+        .map(
+          (_, i) =>
+            `-b:a:${i} ${i === 0 ? mainAudioBitrate : audioBitratePerTrack}k`,
+        )
         .join(" ");
 
       // Compress the video with AAC audio compression
@@ -273,8 +289,10 @@ app.whenReady().then(() => {
   ipcMain.handle("getFilename", (_, filepath: string) => getFilename(filepath));
   ipcMain.handle("askFiles", () => askFiles());
   ipcMain.handle("mergeAudio", (_, file: string) => mergeAudio(file));
-  ipcMain.handle("reduceSize", (_, file: string, bitrate: number, audioTracks: number[]) =>
-    reduceSize(file, bitrate, audioTracks),
+  ipcMain.handle(
+    "reduceSize",
+    (_, file: string, bitrate: number, audioTracks: number[]) =>
+      reduceSize(file, bitrate, audioTracks),
   );
   ipcMain.handle("moveMetadata", (_, file: string, nbTracks: number) =>
     moveMetadata(file, nbTracks),

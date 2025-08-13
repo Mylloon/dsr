@@ -14,7 +14,11 @@ let internals: {
     size: number;
     audioTracks: number[];
   }>;
-  reduceSize: (file: string, bitrate: number, audioTracks: number[]) => Promise<string>;
+  reduceSize: (
+    file: string,
+    bitrate: number,
+    audioTracks: number[],
+  ) => Promise<string>;
   moveMetadata: (file: string, nbTracks: number) => Promise<string>;
   confirmation: (text: string) => Promise<void>;
 };
@@ -40,7 +44,9 @@ const getFiles = async () => {
     // Exit if a file isn't supported in the list
     if (
       files.filter((file) =>
-        allowedExtensions.some((ext) => file.toLowerCase().endsWith(ext.toLowerCase())),
+        allowedExtensions.some((ext) =>
+          file.toLowerCase().endsWith(ext.toLowerCase()),
+        ),
       ).length !== files.length
     ) {
       await internals.exit();
@@ -78,7 +84,11 @@ enum Mode {
 }
 
 /** Update the message to the user */
-const updateMessage = (message: string, load: boolean = false, mode: Mode = Mode.Write) => {
+const updateMessage = (
+  message: string,
+  load: boolean = false,
+  mode: Mode = Mode.Write,
+) => {
   switch (mode) {
     case Mode.Write:
       document.getElementById("message").innerText = message;
@@ -91,7 +101,9 @@ const updateMessage = (message: string, load: boolean = false, mode: Mode = Mode
     default:
       break;
   }
-  document.getElementById("load").style.visibility = load ? "visible" : "hidden";
+  document.getElementById("load").style.visibility = load
+    ? "visible"
+    : "hidden";
 };
 
 /** Main function */
@@ -106,10 +118,15 @@ const main = async () => {
   for (const [idx, file] of files.entries()) {
     const counter = `${idx + 1}/${files.length}`;
     const filename = await internals.getFilename(file);
-    updateMessage(`${counter} - Mélange des pistes audios de ${filename}...`, true);
+    updateMessage(
+      `${counter} - Mélange des pistes audios de ${filename}...`,
+      true,
+    );
     const newFile = await internals.mergeAudio(file);
     let finalTitle = newFile.title;
-    updateMessage(`${counter} - Taille calculée : ~${Math.round(newFile.size)}Mio`);
+    updateMessage(
+      `${counter} - Taille calculée : ~${Math.round(newFile.size)}Mio`,
+    );
 
     // Compress video if needed
     if (newFile.size > maxSizeDiscord) {
@@ -125,12 +142,19 @@ const main = async () => {
       );
 
       // Compress the video and change the title to the new one
-      finalTitle = await internals.reduceSize(newFile.title, bitrate, newFile.audioTracks);
+      finalTitle = await internals.reduceSize(
+        newFile.title,
+        bitrate,
+        newFile.audioTracks,
+      );
     } else {
       updateMessage(`\nPréparation pour le partage...`, true, Mode.Append);
 
       // Move the metadata to make it playable before everything is downloaded
-      finalTitle = await internals.moveMetadata(newFile.title, newFile.audioTracks.length);
+      finalTitle = await internals.moveMetadata(
+        newFile.title,
+        newFile.audioTracks.length,
+      );
     }
 
     // Append title to the list of processed files

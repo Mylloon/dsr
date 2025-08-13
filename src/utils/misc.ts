@@ -25,7 +25,9 @@ export const getVideoDuration = (file: string) => {
 export const getNumberOfAudioTracks = (file: string): number[] => {
   const command = `"${ffprobePath}" -v error -show_entries stream=bit_rate -select_streams a -of json "${file}"`;
   const result = child_process.execSync(command, { encoding: "utf8" });
-  return JSON.parse(result).streams.map((v: { bit_rate: string }) => Number(v.bit_rate) / 1000);
+  return JSON.parse(result).streams.map(
+    (v: { bit_rate: string }) => Number(v.bit_rate) / 1000,
+  );
 };
 
 /** Print an error to the console and open the dev tool panel */
@@ -35,7 +37,9 @@ export const printAndDevTool = (win: BrowserWindow, err: string) => {
 };
 
 /** Run a command asynchronously */
-export const execute = (command: string): Promise<{ stdout: string; stderr: string }> => {
+export const execute = (
+  command: string,
+): Promise<{ stdout: string; stderr: string }> => {
   return new Promise((resolve, reject) => {
     const process = child_process.exec(command, (error, stdout, stderr) => {
       if (error) {

@@ -159,9 +159,10 @@ app.whenReady().then(() => {
    */
   const reduceSize = async (file: string, bitrate: number, audioTracks: number[]) => {
     const audioBitratePerTrack = 128; // kbps
+    const mainAudioBitrate = 192; // kbps for the first track
 
-    // Calculate audio bitrate
-    const audioBitrate = audioTracks.length * audioBitratePerTrack;
+    // Calculate total audio bitrate
+    const audioBitrate = mainAudioBitrate + (audioTracks.length - 1) * audioBitratePerTrack;
     const videoBitrate = bitrate - audioBitrate;
     let finalFile;
 
@@ -210,6 +211,11 @@ app.whenReady().then(() => {
         codec = "libx265";
       }
 
+      // Build per-track audio bitrate
+      const audioBitrateArgs = audioTracks
+        .map((_, i) => `-b:a:${i} ${i === 0 ? mainAudioBitrate : audioBitratePerTrack}k`)
+        .join(" ");
+
       // Compress the video with AAC audio compression
       // Add metadata to audio's track
       await execute(
@@ -220,7 +226,7 @@ app.whenReady().then(() => {
      && \
      "${ffmpegPath}" -y ${hwAcc} \
      -i "${file}" \
-     -c:v ${codec} -b:v ${videoBitrate}k -pass 2 -c:a aac -b:a ${audioBitratePerTrack}k \
+     -c:v ${codec} -b:v ${videoBitrate}k -pass 2 -c:a aac ${audioBitrateArgs} \
      ${mappingTracks} -f mp4 \
      -profile:v main \
      ${audioTracks.length === metadataAudioSize ? metadataAudio : ""} \

@@ -51,6 +51,7 @@ const createWindow = () => {
     width: 600,
     height: 340,
     icon: "./image/icon." + (onWindows ? "ico" : "png"),
+    title: "Discord Video Sharing v" + app.getVersion(),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),

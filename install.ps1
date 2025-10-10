@@ -7,13 +7,14 @@ param (
 
 $path = "$env:LOCALAPPDATA\DSR"
 $update = Test-Path -Path $path\*
-$iwa = "-UserAgent 'confOS'"
+$ua = "confOS"
 
 # Download
 $releases = "https://git.mylloon.fr/api/v1/repos/Anri/dsr/releases/latest"
-$link = (Invoke-WebRequest $iwa $releases | ConvertFrom-Json)[0].assets.browser_download_url
+$assets = (Invoke-WebRequest -Uri $releases -UserAgent $ua | ConvertFrom-Json).assets
+$link = $assets | Where-Object { $_.name -like "*win32*" } | Select-Object -ExpandProperty browser_download_url
 $archive = "$env:TEMP\dsr.zip"
-Invoke-WebRequest $iwa -Uri $link -OutFile $archive
+Invoke-WebRequest -UserAgent $ua -Uri $link -OutFile $archive
 Remove-Item "$path" -Recurse -ErrorAction SilentlyContinue
 
 # Close running DSR

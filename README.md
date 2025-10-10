@@ -21,19 +21,24 @@ Install from AUR: [dsr](https://aur.archlinux.org/packages/dsr)
 
 You can add thoses flags in the `Target` field of your Windows shortcut.
 
-|               |                                                        |
-| ------------- | ------------------------------------------------------ |
-| `/nitro`      | Increase the file limit to 500Mo                       |
-| `/nitrobasic` | Increase the file limit to 50Mo                        |
-|               |                                                        |
-| `/nvenc_h264` | Enable NVenc with H.264 encoder (NVidia GPU required)  |
-| `/nvenc_h265` | Enable NVenc with H.265 encoder (NVidia GPU required)  |
-| `/amd_h264`   | Enable AMF using DX11 with H.264 encoder (for AMD GPU) |
-| `/amd_h265`   | Enable AMF using DX11 with H.265 encoder (for AMD GPU) |
-| `/h265`       | Enable the H.265 CPU encoder (slow compression)        |
+|                   |                                                        |
+| ----------------- | ------------------------------------------------------ |
+| `/nitro`          | Increase the file limit to 500Mo                       |
+| `/nitrobasic`     | Increase the file limit to 50Mo                        |
+|                   |                                                        |
+| `/nvenc_h264`     | Enable NVenc with H.264 encoder (for NVidia GPU)       |
+| `/nvenc_h265`     | Enable NVenc with H.265 encoder (for NVidia GPU)       |
+| `/amd_h264`       | Enable AMF using DX11 with H.264 encoder (for AMD GPU) |
+| `/amd_h265`       | Enable AMF using DX11 with H.265 encoder (for AMD GPU) |
+| `/h265`           | Enable the H.265 CPU encoder                           |
+| `/bitrateratio=1` | Change the ratio for the bitrate, default to 1         |
 
-> NVidia and AMD hardware accelerators support is experimental, but faster
-> than CPU counterparts.
+> NVidia and AMD hardware accelerators are faster than CPU counterparts.
+
+> H.265 means slower compression but usually smaller files
+
+> `bitrateratio` option allows you to change the bitrate, if the file you want to compress
+> is either too small or too big.
 
 ## More info
 
@@ -51,8 +56,10 @@ You can add thoses flags in the `Target` field of your Windows shortcut.
         nothing
 - [x] Support multiples files at once
 - [x] Always optimize for video streaming
+- [x] Customizable bitrate
 
-## Package the app for Windows
+<!--
+## Package the app for Windows on Linux
 
 ```bash
 npm i --platform=win32
@@ -60,3 +67,4 @@ npm run make -- --platform=win32
 ```
 
 It will create a ZIP folder in `./out/make`.
+-->

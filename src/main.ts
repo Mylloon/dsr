@@ -162,6 +162,7 @@ app.whenReady().then(() => {
     file: string,
     bitrate: number,
     audioTracks: number[],
+    bitrateratio: number = 1,
   ) => {
     const audioBitratePerTrack = 128; // kbps
     const mainAudioBitrate = 192; // kbps for the first track
@@ -169,7 +170,8 @@ app.whenReady().then(() => {
     // Calculate total audio bitrate
     const audioBitrate =
       mainAudioBitrate + (audioTracks.length - 1) * audioBitratePerTrack;
-    const videoBitrate = bitrate - audioBitrate;
+    const scaledBitrate = Math.round(bitrate * bitrateratio);
+    const videoBitrate = scaledBitrate - audioBitrate;
     let finalFile;
 
     if (videoBitrate > 0) {
@@ -292,8 +294,13 @@ app.whenReady().then(() => {
   ipcMain.handle("mergeAudio", (_, file: string) => mergeAudio(file));
   ipcMain.handle(
     "reduceSize",
-    (_, file: string, bitrate: number, audioTracks: number[]) =>
-      reduceSize(file, bitrate, audioTracks),
+    (
+      _,
+      file: string,
+      bitrate: number,
+      audioTracks: number[],
+      bitrateratio: number,
+    ) => reduceSize(file, bitrate, audioTracks, bitrateratio),
   );
   ipcMain.handle("moveMetadata", (_, file: string, nbTracks: number) =>
     moveMetadata(file, nbTracks),

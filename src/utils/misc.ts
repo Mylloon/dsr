@@ -1,7 +1,9 @@
 import child_process = require("child_process");
 import path = require("path");
-import { BrowserWindow } from "electron";
+
 import { existsSync, unlink } from "fs";
+
+import { BrowserWindow } from "electron";
 
 import ffprobe = require("ffprobe-static");
 const ffprobePath = ffprobe.path.replace("app.asar", "app.asar.unpacked");

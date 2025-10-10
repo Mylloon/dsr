@@ -1,12 +1,12 @@
-import { app, BrowserWindow, dialog, ipcMain, Notification } from "electron";
-import { statSync, copyFileSync } from "fs";
+import { BrowserWindow, Notification, app, dialog, ipcMain } from "electron";
+import { copyFileSync, statSync } from "fs";
 import {
   deleteFile,
   deleteTwoPassFiles,
   execute,
   getNewFilename,
-  getVideoDuration,
   getNumberOfAudioTracks,
+  getVideoDuration,
   printAndDevTool,
   processes,
 } from "./utils/misc";

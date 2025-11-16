@@ -203,7 +203,9 @@ app.whenReady().then(() => {
         // Use AMF H.264
         codec = onWindows ? "h264_amf" : "h264_vaapi";
         hwAcc = onWindows ? "-hwaccel d3d11va" : "-hwaccel vaapi";
-        onWindows ? (vfFilters = HDRtoSDR) : [];
+        if (!onWindows) {
+          vfFilters = HDRtoSDR;
+        }
       } else if (argv.includes("/nvenc_h265")) {
         // Use NVenc H.265
         codec = "hevc_nvenc";
@@ -214,7 +216,9 @@ app.whenReady().then(() => {
         // Use AMF H.265
         codec = onWindows ? "hevc_amf" : "hevc_vaapi";
         hwAcc = onWindows ? "-hwaccel d3d11va" : "-hwaccel vaapi";
-        onWindows ? (vfFilters = HDRtoSDR) : [];
+        if (!onWindows) {
+          vfFilters = HDRtoSDR;
+        }
       } else if (argv.includes("/h265")) {
         // Use H.265 encoder
         codec = "libx265";

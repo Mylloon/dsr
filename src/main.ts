@@ -188,9 +188,7 @@ app.whenReady().then(() => {
 
       let codec = "libx264";
       let hwAcc = "";
-      let vfFilters = "";
-
-      const HDRtoSDR = `-vf 'format=nv12|vaapi,hwupload,scale_vaapi=w=iw:h=ih'`;
+      const vfFilters = "-pix_fmt yuv420p"; // Filter 10 to 8 bits
 
       const argv = process.argv;
       if (argv.includes("/nvenc_h264")) {
@@ -202,10 +200,9 @@ app.whenReady().then(() => {
       } else if (argv.includes("/amd_h264")) {
         // Use AMF H.264
         codec = onWindows ? "h264_amf" : "h264_vaapi";
-        hwAcc = onWindows ? "-hwaccel d3d11va" : "-hwaccel vaapi";
-        if (!onWindows) {
-          vfFilters = HDRtoSDR;
-        }
+        hwAcc = onWindows
+          ? "-hwaccel d3d11va"
+          : "-hwaccel vaapi -hwaccel_output_format vaapi";
       } else if (argv.includes("/nvenc_h265")) {
         // Use NVenc H.265
         codec = "hevc_nvenc";
@@ -215,10 +212,9 @@ app.whenReady().then(() => {
       } else if (argv.includes("/amd_h265")) {
         // Use AMF H.265
         codec = onWindows ? "hevc_amf" : "hevc_vaapi";
-        hwAcc = onWindows ? "-hwaccel d3d11va" : "-hwaccel vaapi";
-        if (!onWindows) {
-          vfFilters = HDRtoSDR;
-        }
+        hwAcc = onWindows
+          ? "-hwaccel d3d11va"
+          : "-hwaccel vaapi -hwaccel_output_format vaapi";
       } else if (argv.includes("/h265")) {
         // Use H.265 encoder
         codec = "libx265";
@@ -237,8 +233,9 @@ app.whenReady().then(() => {
       await execute(
         `"${ffmpegPath}" -y ${hwAcc} \
      -i "${file}" \
-     ${vfFilters} \
      -c:v ${codec} -b:v ${videoBitrate}k -pass 1 -an -f mp4 \
+     -profile:v main \
+     ${vfFilters} \
      ${nul} \
      && \
      "${ffmpegPath}" -y ${hwAcc} \
@@ -246,6 +243,7 @@ app.whenReady().then(() => {
      -c:v ${codec} -b:v ${videoBitrate}k -pass 2 -c:a aac ${audioBitrateArgs} \
      ${mappingTracks} -f mp4 \
      -profile:v main \
+     ${vfFilters} \
      ${audioTracks.length === metadataAudioSize ? metadataAudio : ""} \
      ${shareOpt} \
      "${finalFile}"`,

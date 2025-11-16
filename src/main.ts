@@ -233,17 +233,16 @@ app.whenReady().then(() => {
       await execute(
         `"${ffmpegPath}" -y ${hwAcc} \
      -i "${file}" \
-     -c:v ${codec} -b:v ${videoBitrate}k -pass 1 -an -f mp4 \
-     -profile:v main \
-     ${vfFilters} \
+     -c:v ${codec} -b:v ${videoBitrate}k \
+     ${vfFilters} -profile:v main \
+     -pass 1 -an -f mp4 \
      ${nul} \
      && \
      "${ffmpegPath}" -y ${hwAcc} \
      -i "${file}" \
+     ${vfFilters} -profile:v main \
      -c:v ${codec} -b:v ${videoBitrate}k -pass 2 -c:a aac ${audioBitrateArgs} \
      ${mappingTracks} -f mp4 \
-     -profile:v main \
-     ${vfFilters} \
      ${audioTracks.length === metadataAudioSize ? metadataAudio : ""} \
      ${shareOpt} \
      "${finalFile}"`,

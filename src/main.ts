@@ -180,12 +180,6 @@ app.whenReady().then(() => {
       // Trash the output, depends on the platform
       const nul = onWindows ? "NUL" : "/dev/null";
 
-      // Mapping of tracks for FFMPEG, adding 1 for the video stream
-      const mappingTracks = Array(audioTracks.length + 1)
-        .fill("-map 0:")
-        .map((str, index) => str + index)
-        .join(" ");
-
       let codec = "libx264";
       let hwAcc = "";
       const vfFilters = "-pix_fmt yuv420p"; // Filter 10 to 8 bits
@@ -240,9 +234,10 @@ app.whenReady().then(() => {
      && \
      "${ffmpegPath}" -y ${hwAcc} \
      -i "${file}" \
+     -c:v ${codec} -b:v ${videoBitrate}k \
      ${vfFilters} -profile:v main \
-     -c:v ${codec} -b:v ${videoBitrate}k -pass 2 -c:a aac ${audioBitrateArgs} \
-     ${mappingTracks} -f mp4 \
+     -pass 2 -c:a aac ${audioBitrateArgs} \
+     -map 0:v -map 0:a? -f mp4 \
      ${audioTracks.length === metadataAudioSize ? metadataAudio : ""} \
      ${shareOpt} \
      "${finalFile}"`,

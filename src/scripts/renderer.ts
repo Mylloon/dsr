@@ -37,6 +37,7 @@ const getFiles = async () => {
       }
       return true;
     })
+    .filter((file) => file !== ".")
     .map((element) => element.split("/").pop());
 
   if (argvFiles.length > 0) {

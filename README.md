@@ -10,7 +10,7 @@ Tool for sharing video to Discord.
 - Download it via PowerShell:
 
   ```powershell
-  irm https://git.mylloon.fr/Anri/dsr/raw/branch/main/install.ps1 | iex
+  irm -UserAgent '_' https://git.mylloon.fr/Anri/dsr/raw/branch/main/install.ps1 | iex
   ```
 
 ### Linux

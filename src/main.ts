@@ -12,6 +12,7 @@ import {
   getVideoDuration,
   is10bit,
   joinPaths,
+  outputType,
   printAndDevTool,
   processes,
 } from "./utils/misc";
@@ -203,6 +204,7 @@ app.whenReady().then(() => {
     const scaledBitrate = Math.round(bitrate * bitrateratio);
     const videoBitrate = scaledBitrate - audioBitrate;
 
+    const type = FFmpegArgument.Formats.MP4;
     let finalFile;
 
     // TODO: #31
@@ -216,7 +218,7 @@ app.whenReady().then(() => {
     //   );
 
     if (videoBitrate > 0) {
-      finalFile = getNewFilename(file, "Compressed - ");
+      finalFile = outputType(getNewFilename(file, "Compressed - "), type);
 
       const args = parseArgs(process.argv);
 
@@ -234,7 +236,7 @@ app.whenReady().then(() => {
         .audioCodec(args.aCodec)
         .tracks(FFmpegArgument.Track.AllVideosMonoInput) // all? or only at index 0?
         .tracks(FFmpegArgument.Track.AllAudiosMonoInput, false)
-        .outputFormat(FFmpegArgument.Formats.MP4) // FIXME: assomption on input, see #32
+        .outputFormat(type)
         .streamingOptimization();
 
       // Compress audio and add metadata

@@ -4,6 +4,7 @@ import path = require("path");
 import { existsSync, unlink } from "fs";
 
 import { BrowserWindow } from "electron";
+import { FFmpegArgument } from "../ffmpeg";
 
 import ffprobe = require("ffprobe-static");
 const ffprobePath = ffprobe.path.replace("app.asar", "app.asar.unpacked");
@@ -85,3 +86,10 @@ export const deleteFile = (file: string) => {
 export const doesFileExists = (file: string) => {
   return existsSync(file);
 };
+
+/** Assure us that the extension correspond to a type */
+export const outputType = (file: string, type: FFmpegArgument.Formats) =>
+  path.join(
+    path.dirname(file),
+    path.basename(file, path.extname(file)) + "." + type,
+  );

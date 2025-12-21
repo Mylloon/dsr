@@ -13,11 +13,13 @@ let internals: {
     duration: number;
     size: number;
     audioTracks: number[];
+    is10bit: boolean;
   }>;
   reduceSize: (
     file: string,
     bitrate: number,
     audioTracks: number[],
+    is10bit: boolean,
     bitrateratio?: number,
   ) => Promise<string>;
   moveMetadata: (file: string, nbTracks: number) => Promise<string>;
@@ -153,6 +155,7 @@ const main = async () => {
         newFile.title,
         bitrate,
         newFile.audioTracks,
+        newFile.is10bit,
         bitrateRatio,
       );
     } else {

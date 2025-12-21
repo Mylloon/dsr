@@ -6,7 +6,8 @@
   "scripts": {
     "build": "rm -rf ./dist 2> /dev/null; npx tsc",
     "start": "npm run build && electron-forge start",
-    "make": "npm run build && electron-forge make"
+    "make": "npm run build && electron-forge make",
+    "test": "node --import tsx --test **/*.test.ts"
   },
   "repository": {
     "type": "git",
@@ -26,7 +27,8 @@
   "devDependencies": {
     "@electron-forge/cli": "^7.10",
     "@types/ffprobe-static": "^2.0",
-    "electron": "^39.2"
+    "electron": "^39.2",
+    "tsx": "^4.21"
   },
   "config": {
     "forge": {

@@ -21,21 +21,22 @@ Install from AUR: [dsr](https://aur.archlinux.org/packages/dsr)
 
 You can add thoses flags in the `Target` field of your Windows shortcut.
 
-|                   |                                                        |
-| ----------------- | ------------------------------------------------------ |
-| `/nitro`          | Increase the file limit to 500Mo                       |
-| `/nitrobasic`     | Increase the file limit to 50Mo                        |
-|                   |                                                        |
-| `/nvenc_h264`     | Enable NVenc with H.264 encoder (for NVidia GPU)       |
-| `/nvenc_h265`     | Enable NVenc with H.265 encoder (for NVidia GPU)       |
-| `/amd_h264`       | Enable AMF using DX11 with H.264 encoder (for AMD GPU) |
-| `/amd_h265`       | Enable AMF using DX11 with H.265 encoder (for AMD GPU) |
-| `/h265`           | Enable the H.265 CPU encoder                           |
-| `/bitrateratio=1` | Change the ratio for the bitrate, default to 1         |
-
-> NVidia and AMD hardware accelerators are faster than CPU counterparts.
-
-> H.265 means slower compression but usually smaller files
+|                   |                                                         |
+| ----------------- | ------------------------------------------------------- |
+| `/nitro`          | Increase the file limit to 500Mo                        |
+| `/nitrobasic`     | Increase the file limit to 50Mo                         |
+|                   |                                                         |
+| `/nvidia`         | Use you NVidia GPU with NVenc                           |
+| `/amd`            | Use your AMD GPU with DX11 on Windows or VAAPI on Linux |
+| `/qsv`            | Use your Intel (A\|G)PU with QSV API                    |
+| `/vulkan`         | Use your GPU with Vulkan API                            |
+|                   |                                                         |
+| `/h264`           | Enable the H.265 encoder (default)                      |
+| `/h265`           | Enable the H.265 encoder                                |
+| `/av1`            | Enable the AV1 encoder                                  |
+| `/vp9`            | Enable the VP9 encoder                                  |
+|                   |                                                         |
+| `/bitrateratio=1` | Change the ratio for the bitrate, defaults to 1         |
 
 > `bitrateratio` option allows you to change the bitrate, if the file you want to compress
 > is either too small or too big.
@@ -45,10 +46,9 @@ You can add thoses flags in the `Target` field of your Windows shortcut.
 - [x] KISS interface
   - [x] Support drag&drop into the icon
 - [x] Keep the video under discord limitation
-  - [x] Defaults to H.264 CPU encoder
   - [x] If already under the limit, the file won't be compressed
-  - [x] NVenc support
-  - [x] AMD cards acceleration support
+  - [x] Defaults to H.264 CPU encoder
+  - [x] GPUs support
   - [x] Nitro suppport
 - [x] Merge 2 audio files into one track when recorded with system audio and microphone
       split up, while keeping the original ones (with conveniant metadata)

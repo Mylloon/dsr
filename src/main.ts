@@ -1,28 +1,39 @@
 import { BrowserWindow, Notification, app, dialog, ipcMain } from "electron";
 import { copyFileSync, statSync } from "fs";
+
+import { FFmpegArgument, FFmpegBuilder } from "./ffmpeg";
+import { parseArgs } from "./utils/cli";
 import {
   deleteFile,
-  deleteTwoPassFiles,
+  doesFileExists,
   execute,
   getNewFilename,
   getNumberOfAudioTracks,
   getVideoDuration,
+  is10bit,
+  joinPaths,
   printAndDevTool,
   processes,
 } from "./utils/misc";
+
 import path = require("path");
 
-import ffmpeg = require("ffmpeg-static");
-let ffmpegPath;
-try {
-  ffmpegPath = "ffmpeg";
-  require("child_process").execSync(`${ffmpegPath} -version`, {
-    stdio: "ignore",
-  });
-} catch {
-  ffmpegPath = `${ffmpeg}`.replace("app.asar", "app.asar.unpacked");
-}
+const ffmpegPath = (() => {
+  try {
+    const bin = "ffmpeg";
+    require("child_process").execSync(`${bin} -version`, {
+      stdio: "ignore",
+    });
+    return bin;
+  } catch {
+    return `${require("ffmpeg-static")}`.replace(
+      "app.asar",
+      "app.asar.unpacked",
+    );
+  }
+})();
 
+/** Global error flag */
 let error = false;
 
 const moviesFilter = {
@@ -30,12 +41,11 @@ const moviesFilter = {
   extensions: ["mp4", "mkv"],
 };
 
-const metadataAudioSize = 3;
-const metadataAudio = `-metadata:s:a:0 title="System sounds and microphone" \
-                       -metadata:s:a:1 title="System sounds" \
-                       -metadata:s:a:2 title="Microphone"`;
-
-const shareOpt = "-movflags +faststart";
+const metadataTitles = [
+  "System sounds and microphone",
+  "System sounds",
+  "Microphone",
+];
 
 /** Register a new error  */
 const registerError = (win: BrowserWindow, err: string) => {
@@ -43,14 +53,14 @@ const registerError = (win: BrowserWindow, err: string) => {
   printAndDevTool(win, err);
 };
 
-const onWindows = process.platform === "win32";
+const onWindowsSystem = process.platform === "win32";
 
 /** Create a new window */
 const createWindow = () => {
   const win = new BrowserWindow({
     width: 600,
     height: 340,
-    icon: "./image/icon." + (onWindows ? "ico" : "png"),
+    icon: "./image/icon." + (onWindowsSystem ? "ico" : "png"),
     title: "Discord Video Sharing v" + app.getVersion(),
     autoHideMenuBar: true,
     webPreferences: {
@@ -64,7 +74,7 @@ const createWindow = () => {
 };
 
 // For notification on Windows
-if (onWindows) {
+if (onWindowsSystem) {
   app.setAppUserModelId(app.name);
 }
 
@@ -98,39 +108,53 @@ app.whenReady().then(() => {
   /** Merge all audios track of a video into one
    *  In case video doesn't have exactly two audio streams, silently pass */
   const mergeAudio = async (file: string) => {
-    const tmpFile = getNewFilename(file, "TMP_");
-    let outFile;
+    let outFile: string;
 
     let audioTracks = getNumberOfAudioTracks(file);
+    const pixelFmt10bit_check = is10bit(file);
 
     switch (audioTracks.length) {
       case 2:
-        // Merge 2 audio
+        // Merge 2 audio, move result as first default audio track with fancy metadata
         // See: https://trac.ffmpeg.org/wiki/AudioChannelManipulation#a2stereostereo
-        await execute(
-          `"${ffmpegPath}" -y \
-           -i "${file}" \
-           -filter_complex "[0:a]amerge=inputs=2[a]" -ac 2 -map 0:v -map "[a]" \
-           -c:v copy \
-           "${tmpFile}"`,
-        );
+        const name = "audio_merged";
+        const filter = `[0:a:0][0:a:1]amerge=inputs=2[${name}]`;
 
         outFile = getNewFilename(file, "(merged audio) ");
 
-        // Add merged audio as first position to original video and make it default
-        // About disposition: https://ffmpeg.org/ffmpeg.html#Main-options
-        // Also rename all tracks accordingly to what they are
-        await execute(
-          `"${ffmpegPath}" -y \
-         -i "${tmpFile}" -i "${file}" \
-         -map 0 -map 1:a -c:v copy \
-         -disposition:a 0 -disposition:a:0 default \
-         ${metadataAudio} \
-         "${outFile}"`,
-        ).catch((e) => registerError(win, e));
+        const builder = new FFmpegBuilder(ffmpegPath)
+          .input(file)
+          .output(outFile)
+          .videoCodec(FFmpegArgument.Codecs.Video.Copy)
+          .tracks(FFmpegArgument.Track.AllVideosMonoInput)
+          .tracks(FFmpegArgument.Track.customTrack(`[${name}]`))
+          .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
+          .filterComplex(filter)
+          .disposition(
+            FFmpegArgument.Stream.Disposition(
+              FFmpegArgument.Stream.DispositionTarget(
+                FFmpegArgument.Stream.Type.Audio,
+              ),
+              FFmpegArgument.Stream.DispositionAction.Erase,
+            ),
+          )
+          .disposition(
+            FFmpegArgument.Stream.Disposition(
+              FFmpegArgument.Stream.DispositionTarget(
+                FFmpegArgument.Stream.Type.Audio,
+                0,
+              ),
+              FFmpegArgument.Stream.DispositionAction.MakeDefault,
+            ),
+          );
 
-        // Delete the temporary video file
-        deleteFile(tmpFile);
+        metadataTitles.forEach((title, i) => {
+          builder.customMetadata(
+            FFmpegArgument.Track.Metadata(FFmpegArgument.Track.Audio(i), title),
+          );
+        });
+
+        await execute(builder.toString()).catch((e) => registerError(win, e));
 
         audioTracks = getNumberOfAudioTracks(outFile);
 
@@ -152,7 +176,12 @@ app.whenReady().then(() => {
       size: stats.size / 1024 / 1024,
       duration,
       audioTracks,
+      is10bit: pixelFmt10bit_check,
     };
+  };
+
+  const bitrateKB = (value: number): FFmpegArgument.Stream.Bitrate => {
+    return { value, unit: FFmpegArgument.Stream.Unit.Kb };
   };
 
   /** Reduce size of a file
@@ -162,6 +191,7 @@ app.whenReady().then(() => {
     file: string,
     bitrate: number,
     audioTracks: number[],
+    is10bit: boolean,
     bitrateratio: number = 1,
   ) => {
     const audioBitratePerTrack = 128; // kbps
@@ -172,79 +202,86 @@ app.whenReady().then(() => {
       mainAudioBitrate + (audioTracks.length - 1) * audioBitratePerTrack;
     const scaledBitrate = Math.round(bitrate * bitrateratio);
     const videoBitrate = scaledBitrate - audioBitrate;
+
     let finalFile;
+
+    // TODO: #31
+    // You could use for example:
+    // builder
+    //   .videoFilter(FFmpegArgument.VideoFilters.Scaler(1280, 720))
+    //   .videoFilter(
+    //     FFmpegArgument.VideoFilters.Framerate(
+    //       current_framerate >= 60 ? 30 : current_framerate,
+    //     ),
+    //   );
 
     if (videoBitrate > 0) {
       finalFile = getNewFilename(file, "Compressed - ");
 
-      // Trash the output, depends on the platform
-      const nul = onWindows ? "NUL" : "/dev/null";
+      const args = parseArgs(process.argv);
 
-      let codec = "libx264";
-      let hwAcc = "";
-      const vfFilters = "-pix_fmt yuv420p"; // Filter 10 to 8 bits
+      const builder = new FFmpegBuilder(ffmpegPath)
+        .yes()
+        .input(file)
+        .output(finalFile)
+        .videoCodec(args.vCodec)
+        .bitrate(
+          FFmpegArgument.Stream.Bitrate(
+            FFmpegArgument.Stream.Type.Video,
+            bitrateKB(videoBitrate),
+          ),
+        )
+        .audioCodec(args.aCodec)
+        .tracks(FFmpegArgument.Track.AllVideosMonoInput) // all? or only at index 0?
+        .tracks(FFmpegArgument.Track.AllAudiosMonoInput, false)
+        .outputFormat(FFmpegArgument.Formats.MP4) // FIXME: assomption on input, see #32
+        .streamingOptimization();
 
-      const argv = process.argv;
-      if (argv.includes("/nvenc_h264")) {
-        // Use NVenc H.264
-        codec = "h264_nvenc";
-        hwAcc = onWindows
-          ? "-hwaccel cuda"
-          : "-hwaccel cuda -hwaccel_output_format cuda";
-      } else if (argv.includes("/amd_h264")) {
-        // Use AMF H.264
-        codec = onWindows ? "h264_amf" : "h264_vaapi";
-        hwAcc = onWindows
-          ? "-hwaccel d3d11va"
-          : "-hwaccel vaapi -hwaccel_output_format vaapi";
-      } else if (argv.includes("/nvenc_h265")) {
-        // Use NVenc H.265
-        codec = "hevc_nvenc";
-        hwAcc = onWindows
-          ? "-hwaccel cuda"
-          : "-hwaccel cuda -hwaccel_output_format cuda";
-      } else if (argv.includes("/amd_h265")) {
-        // Use AMF H.265
-        codec = onWindows ? "hevc_amf" : "hevc_vaapi";
-        hwAcc = onWindows
-          ? "-hwaccel d3d11va"
-          : "-hwaccel vaapi -hwaccel_output_format vaapi";
-      } else if (argv.includes("/h265")) {
-        // Use H.265 encoder
-        codec = "libx265";
+      // Compress audio and add metadata
+      audioTracks.forEach((_, i) => {
+        builder.bitrate(
+          FFmpegArgument.Stream.Bitrate(
+            FFmpegArgument.Stream.Type.Audio,
+            bitrateKB(i === 0 ? mainAudioBitrate : audioBitratePerTrack),
+            i,
+          ),
+        );
+        i < metadataTitles.length &&
+          builder.customMetadata(
+            FFmpegArgument.Track.Metadata(
+              FFmpegArgument.Track.Audio(i),
+              metadataTitles[i],
+            ),
+          );
+      });
+
+      // 10 bit doesnt work on hardware backends
+      if (is10bit) {
+        builder.videoFilter(FFmpegArgument.VideoFilters.PixelFormatYUV420);
+
+        // AV1 have issue using 2-pass with 10 bit videos
+        if (args.vCodec !== FFmpegArgument.Codecs.Video.AV1) {
+          builder.twopass();
+        }
+      } else {
+        // Hardware acceleration don't support 2-pass
+        if (args.hw) {
+          builder.hardwareAcceleration(args.hw);
+        } else {
+          builder.twopass();
+        }
       }
 
-      // Build per-track audio bitrate
-      const audioBitrateArgs = audioTracks
-        .map(
-          (_, i) =>
-            `-b:a:${i} ${i === 0 ? mainAudioBitrate : audioBitratePerTrack}k`,
-        )
-        .join(" ");
+      const twopass_logfiles = builder.leftoverFiles();
 
-      // Compress the video with AAC audio compression
-      // Add metadata to audio's track
-      await execute(
-        `"${ffmpegPath}" -y ${hwAcc} \
-     -i "${file}" \
-     -c:v ${codec} -b:v ${videoBitrate}k \
-     ${vfFilters} -profile:v main \
-     -pass 1 -an -f mp4 \
-     ${nul} \
-     && \
-     "${ffmpegPath}" -y ${hwAcc} \
-     -i "${file}" \
-     -c:v ${codec} -b:v ${videoBitrate}k \
-     ${vfFilters} -profile:v main \
-     -pass 2 -c:a aac ${audioBitrateArgs} \
-     -map 0:v -map 0:a? -f mp4 \
-     ${audioTracks.length === metadataAudioSize ? metadataAudio : ""} \
-     ${shareOpt} \
-     "${finalFile}"`,
-      ).catch((e) => registerError(win, e));
+      // Start compression
+      await execute(builder.toString()).catch((e) => registerError(win, e));
 
       // Delete the 2 pass temporary files
-      deleteTwoPassFiles(process.cwd());
+      twopass_logfiles
+        .map((f) => joinPaths(process.cwd(), f))
+        .filter(doesFileExists)
+        .map(deleteFile);
     } else {
       finalFile = "";
     }
@@ -259,15 +296,25 @@ app.whenReady().then(() => {
   const moveMetadata = async (file: string, nbTracks: number) => {
     const finalFile = getNewFilename(file, "Broadcastable - ");
 
+    const builder = new FFmpegBuilder(ffmpegPath)
+      .input(file)
+      .output(finalFile)
+      .videoCodec(FFmpegArgument.Codecs.Video.Copy)
+      .audioCodec(FFmpegArgument.Codecs.Audio.Copy)
+      .tracks(FFmpegArgument.Track.AllVideosMonoInput)
+      .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
+      .streamingOptimization();
+
+    if (nbTracks === metadataTitles.length) {
+      metadataTitles.forEach((title, i) => {
+        builder.customMetadata(
+          FFmpegArgument.Track.Metadata(FFmpegArgument.Track.Audio(i), title),
+        );
+      });
+    }
+
     // Optimize for streaming
-    await execute(
-      `"${ffmpegPath}" -y \
-       -i "${file}" \
-       -map 0 -codec copy \
-       ${shareOpt} \
-       ${nbTracks === metadataAudioSize ? metadataAudio : ""} \
-       "${finalFile}"`,
-    ).catch((e) => registerError(win, e));
+    await execute(builder.toString()).catch((e) => registerError(win, e));
 
     // Delete the old video file
     deleteFile(file);
@@ -289,8 +336,9 @@ app.whenReady().then(() => {
       file: string,
       bitrate: number,
       audioTracks: number[],
+      is10bit: boolean,
       bitrateratio: number,
-    ) => reduceSize(file, bitrate, audioTracks, bitrateratio),
+    ) => reduceSize(file, bitrate, audioTracks, is10bit, bitrateratio),
   );
   ipcMain.handle("moveMetadata", (_, file: string, nbTracks: number) =>
     moveMetadata(file, nbTracks),

@@ -18,9 +18,17 @@ contextBridge.exposeInMainWorld("internals", {
     file: string,
     bitrate: number,
     audioTracks: number[],
+    is10bit: boolean,
     bitrateratio: number,
   ) =>
-    ipcRenderer.invoke("reduceSize", file, bitrate, audioTracks, bitrateratio),
+    ipcRenderer.invoke(
+      "reduceSize",
+      file,
+      bitrate,
+      audioTracks,
+      is10bit,
+      bitrateratio,
+    ),
   moveMetadata: (file: string, nbTracks: number) =>
     ipcRenderer.invoke("moveMetadata", file, nbTracks),
   exit: () => ipcRenderer.invoke("exit"),

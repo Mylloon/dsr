@@ -47,6 +47,16 @@ const metadataTitles = [
   "Microphone",
 ];
 
+const args = parseArgs(process.argv);
+const compressionBuilder = new FFmpegBuilder(ffmpegPath)
+  .yes()
+  .videoCodec(args.vCodec)
+  .audioCodec(args.aCodec)
+  .tracks(FFmpegArgument.Track.AllVideosMonoInput) // all? or only at index 0?
+  .tracks(FFmpegArgument.Track.AllAudiosMonoInput, false)
+  .outputFormat(FFmpegArgument.Formats.MP4) // FIXME: assomption on input, see #32
+  .streamingOptimization();
+
 /** Register a new error  */
 const registerError = (win: BrowserWindow, err: string) => {
   error = true;
@@ -218,24 +228,15 @@ app.whenReady().then(() => {
     if (videoBitrate > 0) {
       finalFile = getNewFilename(file, "Compressed - ");
 
-      const args = parseArgs(process.argv);
-
-      const builder = new FFmpegBuilder(ffmpegPath)
-        .yes()
+      const builder = compressionBuilder
         .input(file)
         .output(finalFile)
-        .videoCodec(args.vCodec)
         .bitrate(
           FFmpegArgument.Stream.Bitrate(
             FFmpegArgument.Stream.Type.Video,
             bitrateKB(videoBitrate),
           ),
-        )
-        .audioCodec(args.aCodec)
-        .tracks(FFmpegArgument.Track.AllVideosMonoInput) // all? or only at index 0?
-        .tracks(FFmpegArgument.Track.AllAudiosMonoInput, false)
-        .outputFormat(FFmpegArgument.Formats.MP4) // FIXME: assomption on input, see #32
-        .streamingOptimization();
+        );
 
       // Compress audio and add metadata
       audioTracks.forEach((_, i) => {

@@ -192,6 +192,18 @@ app.whenReady().then(() => {
     return isFile10bit ? { ...res, hw: null } : res;
   };
 
+  /** Export info for frontend */
+  const exportEncoderInfo = (isFile10bit: boolean) => {
+    const data = encoderInfo(isFile10bit);
+
+    return {
+      codec: Object.entries(FFmpegArgument.Codecs.Video).find(([, codec]) => {
+        return codec === data.vCodec;
+      })?.[0],
+      hw: !!data.hw,
+    };
+  };
+
   /** Reduce size of a file
    * Returns an empty string in case of failing
    */
@@ -356,6 +368,9 @@ app.whenReady().then(() => {
   );
   ipcMain.handle("exit", () => (error ? {} : app.quit()));
   ipcMain.handle("confirmation", (_, text: string) => confirmation(text));
+  ipcMain.handle("wantedEncoder", (_, is10Bit: boolean) =>
+    exportEncoderInfo(is10Bit),
+  );
 });
 
 app.on("window-all-closed", () => {

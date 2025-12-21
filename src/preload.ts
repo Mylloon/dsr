@@ -31,6 +31,8 @@ contextBridge.exposeInMainWorld("internals", {
     ),
   moveMetadata: (file: string, nbTracks: number) =>
     ipcRenderer.invoke("moveMetadata", file, nbTracks),
+  wantedEncoder: (isFile10bit: boolean) =>
+    ipcRenderer.invoke("wantedEncoder", isFile10bit),
   exit: () => ipcRenderer.invoke("exit"),
   confirmation: (text: string) => ipcRenderer.invoke("confirmation", text),
 });

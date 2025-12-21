@@ -24,6 +24,10 @@ let internals: {
   ) => Promise<string>;
   moveMetadata: (file: string, nbTracks: number) => Promise<string>;
   confirmation: (text: string) => Promise<void>;
+  wantedEncoder: (isFile10bit: boolean) => Promise<{
+    codec: string;
+    hw: boolean;
+  }>;
 };
 
 /** Search for files */
@@ -141,8 +145,12 @@ const main = async () => {
     if (newFile.size > maxSizeDiscord) {
       const targetSize = maxSizeDiscord - 2; // keep some room
 
+      const { codec, hw } = await internals.wantedEncoder(newFile.is10bit);
+
       updateMessage(
-        `\nFichier trop lourd, compression en cours... (taille visée : ${maxSizeDiscord}Mo)`,
+        `\nFichier trop lourd, compression en cours avec ${codec}` +
+          (hw ? "/GPU" : "") +
+          `... (taille visée : ${maxSizeDiscord}Mo)`,
         true,
         Mode.Append,
       );

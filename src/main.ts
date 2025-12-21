@@ -185,6 +185,13 @@ app.whenReady().then(() => {
     return { value, unit: FFmpegArgument.Stream.Unit.Kb };
   };
 
+  /** Returns selected encoder and if we use hardware acceleration */
+  const encoderInfo = (isFile10bit: boolean) => {
+    const res = parseArgs(process.argv);
+
+    return isFile10bit ? { ...res, hw: null } : res;
+  };
+
   /** Reduce size of a file
    * Returns an empty string in case of failing
    */
@@ -220,7 +227,7 @@ app.whenReady().then(() => {
     if (videoBitrate > 0) {
       finalFile = outputType(getNewFilename(file, "Compressed - "), type);
 
-      const args = parseArgs(process.argv);
+      const args = encoderInfo(is10bit);
 
       const builder = new FFmpegBuilder(ffmpegPath)
         .yes()
@@ -257,18 +264,20 @@ app.whenReady().then(() => {
           );
       });
 
-      // 10 bit doesnt work on hardware backends
-      if (is10bit) {
-        builder.videoFilter(FFmpegArgument.VideoFilters.PixelFormatYUV420);
-
-        // AV1 have issue using 2-pass with 10 bit videos
-        if (args.vCodec !== FFmpegArgument.Codecs.Video.AV1) {
-          builder.twopass();
-        }
-      } else {
+      if (args.hw) {
         // Hardware acceleration don't support 2-pass
-        if (args.hw) {
-          builder.hardwareAcceleration(args.hw);
+        builder.hardwareAcceleration(args.hw);
+      } else {
+        // No hw support
+        //  means we use CPU
+        //    means we can use 2-pass
+        if (is10bit) {
+          builder.videoFilter(FFmpegArgument.VideoFilters.PixelFormatYUV420);
+
+          // AV1 have issue using 2-pass with 10 bit videos
+          if (args.vCodec !== FFmpegArgument.Codecs.Video.AV1) {
+            builder.twopass();
+          }
         } else {
           builder.twopass();
         }

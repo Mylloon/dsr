@@ -134,21 +134,21 @@ const main = async () => {
     const newFile = await internals.mergeAudio(file);
     let finalTitle = newFile.title;
     updateMessage(
-      `${counter} - Taille calculée : ~${Math.round(newFile.size)}Mio`,
+      `${counter} - Taille actuelle : ~${Math.round(newFile.size)}Mio`,
     );
 
     // Compress video if needed
     if (newFile.size > maxSizeDiscord) {
       const targetSize = maxSizeDiscord - 2; // keep some room
 
-      // https://trac.ffmpeg.org/wiki/Encode/H.264#twopass
-      const bitrate = Math.floor((targetSize * 8388.608) / newFile.duration);
-
       updateMessage(
-        `\nFichier trop lourd, compression en cours... (bitrate total = ${bitrate}kbps)`,
+        `\nFichier trop lourd, compression en cours... (taille visée : ${maxSizeDiscord}Mo)`,
         true,
         Mode.Append,
       );
+
+      // https://trac.ffmpeg.org/wiki/Encode/H.264#twopass
+      const bitrate = Math.floor((targetSize * 8388.608) / newFile.duration);
 
       // Compress the video and change the title to the new one
       finalTitle = await internals.reduceSize(

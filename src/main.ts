@@ -229,7 +229,12 @@ app.whenReady().then(() => {
     // TODO: #31
     // You could use for example:
     // builder
-    //   .videoFilter(FFmpegArgument.VideoFilters.Scaler(1280, 720))
+    //   .videoFilter(
+    //     FFmpegArgument.VideoFilters.Scaler(
+    //       current_width / 1.5,
+    //       current_height / 1.5,
+    //     ),
+    //   )
     //   .videoFilter(
     //     FFmpegArgument.VideoFilters.Framerate(
     //       current_framerate >= 60 ? 30 : current_framerate,

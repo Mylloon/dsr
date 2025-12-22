@@ -18,12 +18,16 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update &&
-          apt-get install -y zip
+          apt-get install -y zip dotnet-sdk-10.0
 
       - name: Build the app for Windows
         run: |
           npm install --platform=win32 &&
           npm run make -- --platform=win32
+
+      - name: Build the exe installer for Windows
+        run: |
+          cd winInstaller && make publish
 
       - name: Clear the node packages
         run: rm -rf node_modules/
@@ -37,5 +41,7 @@ jobs:
         uses: akkuman/gitea-release-action@v1
         with:
           token: ${{ secrets.TOKEN }}
-          files: out/make/zip/**/*.zip
+          files: |-
+            out/make/zip/**/*.zip
+            winInstaller/bin/Release/net10.0/win-x64/publish/*.exe
           draft: true

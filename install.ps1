@@ -7,7 +7,7 @@ param (
 
 $path = "$env:LOCALAPPDATA\DSR"
 $update = Test-Path -Path $path\*
-$ua = "confOS"
+$ua = "dsr-installer-windows"
 
 # Download
 $releases = "https://git.mylloon.fr/api/v1/repos/Anri/dsr/releases/latest"

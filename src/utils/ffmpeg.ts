@@ -396,6 +396,7 @@ export class FFmpegBuilder<
         : FFmpegArgument.SystemNULL.Linux;
     } else {
       this._twoPass = nullOutput;
+      this.onWindows = nullOutput === FFmpegArgument.SystemNULL.Windows;
     }
     return this;
   }
@@ -626,13 +627,8 @@ export class FFmpegBuilder<
         }
 
         // No audio in pass 1
-        // https://trac.ffmpeg.org/wiki/Encode/H.264#Two-PassExample
-        // We could use -an as we never got an issue with a segfault (-an = leave audio out)
-        args.push("-fps_mode", "cfr");
-
-        if (FFmpegBuilder.changed(this._format)) {
-          args.push(`-f ${this._format}`);
-        }
+        args.push("-an");
+        args.push("-f", "null");
 
         // Pass 1 output goes to null
         args.push(this._twoPass);

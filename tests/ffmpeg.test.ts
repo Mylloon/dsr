@@ -61,7 +61,7 @@ describe("FFmpeg builder", () => {
           .outputFormat(FFmpegArgument.Formats.MP4)
           .twopass(FFmpegArgument.SystemNULL.Windows)
           .toString(),
-        `"${binary}" -i "${input}" -c:v libx264 -b:v ${videoBitrate}k -pass 1 -fps_mode cfr -f mp4 NUL && "${binary}" -i "${input}" -c:v libx264 -b:v ${videoBitrate}k -pass 2 -c:a aac -map 0:v -map 0:a -f mp4 "${output}"`,
+        `"${binary}" -i "${input}" -c:v libx264 -b:v ${videoBitrate}k -pass 1 -an -f null NUL && "${binary}" -i "${input}" -c:v libx264 -b:v ${videoBitrate}k -pass 2 -c:a aac -map 0:v -map 0:a -f mp4 "${output}"`,
       );
     });
   }
@@ -86,7 +86,7 @@ describe("FFmpeg builder", () => {
           .outputFormat(FFmpegArgument.Formats.MP4)
           .twopass(FFmpegArgument.SystemNULL.Windows)
           .toString(),
-        `"${binary}" -i "${input}" -c:v libx265 -b:v ${videoBitrate}k -x265-params pass=1 -fps_mode cfr -f mp4 NUL && "${binary}" -i "${input}" -c:v libx265 -b:v ${videoBitrate}k -x265-params pass=2 -c:a aac -map 0:v -map 0:a -f mp4 "${output}"`,
+        `"${binary}" -i "${input}" -c:v libx265 -b:v ${videoBitrate}k -x265-params pass=1 -an -f null NUL && "${binary}" -i "${input}" -c:v libx265 -b:v ${videoBitrate}k -x265-params pass=2 -c:a aac -map 0:v -map 0:a -f mp4 "${output}"`,
       );
     });
   }
@@ -111,7 +111,7 @@ describe("FFmpeg builder", () => {
           .outputFormat(FFmpegArgument.Formats.MP4)
           .twopass(FFmpegArgument.SystemNULL.Windows)
           .toString(),
-        `"${binary}" -i "${input}" -c:v libaom-av1 -cpu-used 6 -b:v ${videoBitrate}k -pass 1 -fps_mode cfr -f mp4 NUL && "${binary}" -i "${input}" -c:v libaom-av1 -cpu-used 6 -b:v ${videoBitrate}k -pass 2 -c:a aac -map 0:v -map 0:a -f mp4 "${output}"`,
+        `"${binary}" -i "${input}" -c:v libaom-av1 -cpu-used 6 -b:v ${videoBitrate}k -pass 1 -an -f null NUL && "${binary}" -i "${input}" -c:v libaom-av1 -cpu-used 6 -b:v ${videoBitrate}k -pass 2 -c:a aac -map 0:v -map 0:a -f mp4 "${output}"`,
       );
     });
   }

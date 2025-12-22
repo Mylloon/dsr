@@ -646,7 +646,6 @@ export class FFmpegBuilder<
             break;
           }
         }
-        break;
       }
     }
 

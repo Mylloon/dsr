@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { FFmpegArgument, FFmpegBuilder } from "../src/ffmpeg";
+import { FFmpegArgument, FFmpegBuilder } from "../src/utils/ffmpeg";
 
 describe("FFmpeg builder", () => {
   const binary = "ffmpeg";

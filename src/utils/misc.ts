@@ -4,7 +4,7 @@ import path = require("path");
 import { existsSync, unlink } from "fs";
 
 import { BrowserWindow } from "electron";
-import { FFmpegArgument } from "../ffmpeg";
+import { FFmpegArgument } from "./ffmpeg";
 
 import ffprobe = require("ffprobe-static");
 const ffprobePath = ffprobe.path.replace("app.asar", "app.asar.unpacked");

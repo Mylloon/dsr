@@ -1,8 +1,8 @@
 import { BrowserWindow, Notification, app, dialog, ipcMain } from "electron";
 import { copyFileSync, statSync } from "fs";
 
-import { FFmpegArgument, FFmpegBuilder } from "./ffmpeg";
 import { parseArgs } from "./utils/cli";
+import { FFmpegArgument, FFmpegBuilder } from "./utils/ffmpeg";
 import {
   deleteFile,
   doesFileExists,

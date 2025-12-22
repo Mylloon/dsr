@@ -1,4 +1,4 @@
-import { FFmpegArgument } from "../ffmpeg";
+import { FFmpegArgument } from "./ffmpeg";
 
 const codecArgs: Record<string, FFmpegArgument.Codecs.Video> = {
   "/h264": FFmpegArgument.Codecs.Video.H264,

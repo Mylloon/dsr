@@ -6,6 +6,7 @@
   "scripts": {
     "build": "rm -rf ./dist 2> /dev/null; npx tsc",
     "start": "npm run build && electron-forge start",
+    "package": "npm run build && electron-forge package",
     "make": "npm run build && electron-forge make",
     "test": "node --import tsx --test **/*.test.ts"
   },

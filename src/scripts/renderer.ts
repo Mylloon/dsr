@@ -2,6 +2,7 @@
 let internals: {
   argv: () => Promise<string[]>;
   cwd: () => Promise<string>;
+  resolveSymlink: (text: string) => Promise<string>;
   allowedExtensions: () => Promise<{
     extensions: string[];
   }>;
@@ -34,16 +35,15 @@ let internals: {
 const getFiles = async () => {
   const allowedExtensions = (await internals.allowedExtensions()).extensions;
   const currentDir = await internals.cwd();
-  const argvFiles = (await internals.argv())
-    .slice(1)
-    .filter((element) => {
-      if (element.startsWith("/")) {
-        // Slash either fullpath files, or commands args
-        return element.startsWith(currentDir);
-      }
-      return true;
-    })
+  const argvFiles = (
+    await Promise.all(
+      (await internals.argv()).slice(1).map(internals.resolveSymlink),
+    )
+  )
     .filter((file) => file !== ".")
+    // Remove commands args
+    // Assumption: All input files should share the same "currentDirectory"
+    .filter((element) => element.startsWith(currentDir))
     .map((element) => element.split("/").pop());
 
   if (argvFiles.length > 0) {

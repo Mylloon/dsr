@@ -1,5 +1,5 @@
 import { BrowserWindow, Notification, app, dialog, ipcMain } from "electron";
-import { copyFileSync, statSync } from "fs";
+import { copyFileSync, realpathSync, statSync } from "fs";
 
 import { parseArgs } from "./utils/cli";
 import { FFmpegArgument, FFmpegBuilder } from "./utils/ffmpeg";
@@ -204,6 +204,18 @@ app.whenReady().then(() => {
     };
   };
 
+  /** Get real path, in case of error, return the input */
+  const symlinkResolver = (path: string) => {
+    try {
+      return realpathSync(path);
+    } catch {
+      return path;
+    }
+  };
+
+  /** Get real current working directory */
+  const cwd = () => symlinkResolver(process.cwd());
+
   /** Reduce size of a file
    * Returns an empty string in case of failing
    */
@@ -307,7 +319,7 @@ app.whenReady().then(() => {
 
       // Delete the 2 pass temporary files
       twopass_logfiles
-        .map((f) => joinPaths(process.cwd(), f))
+        .map((f) => joinPaths(cwd(), f))
         .filter(doesFileExists)
         .map(deleteFile);
     } else {
@@ -352,7 +364,8 @@ app.whenReady().then(() => {
 
   /* Context bridge */
   ipcMain.handle("argv", () => process.argv);
-  ipcMain.handle("cwd", process.cwd);
+  ipcMain.handle("cwd", cwd);
+  ipcMain.handle("resolveSymlink", (_, path: string) => symlinkResolver(path));
   ipcMain.handle("allowedExtensions", () => moviesFilter);
   ipcMain.handle("getFilename", (_, filepath: string) => getFilename(filepath));
   ipcMain.handle("askFiles", () => askFiles());

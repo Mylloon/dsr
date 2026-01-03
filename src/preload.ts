@@ -9,6 +9,7 @@ ipcRenderer.on("error", (_, err) => {
 contextBridge.exposeInMainWorld("internals", {
   argv: () => ipcRenderer.invoke("argv"),
   cwd: () => ipcRenderer.invoke("cwd"),
+  resolveSymlink: (path: string) => ipcRenderer.invoke("resolveSymlink", path),
   allowedExtensions: () => ipcRenderer.invoke("allowedExtensions"),
   getFilename: (filepath: string) =>
     ipcRenderer.invoke("getFilename", filepath),

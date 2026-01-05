@@ -1,0 +1,33 @@
+name: Publish to package managers
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  winget:
+    runs-on: docker
+    container:
+      image: node
+
+    steps:
+      - name: Update winget package
+        uses: vedantmgoyal9/winget-releaser@main
+        with:
+          identifier: Mylloon.dsr
+          installers-regex: "*-win32-x64-*.zip$"
+          token: ${{ secrets.WINGET_TOKEN }}
+
+  aur:
+    runs-on: docker
+    container:
+      image: node
+
+    steps:
+      - name: Update AUR package
+        uses: ATiltedTree/create-aur-release@v1
+        with:
+          package_name: dsr
+          commit_username: "Forgejo Action"
+          commit_email: forgejo@noreply.git.mylloon.fr
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}

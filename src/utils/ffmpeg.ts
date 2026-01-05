@@ -606,12 +606,6 @@ export class FFmpegBuilder<
       );
     }
 
-    if (FFmpegBuilder.changed(this._filterComplex)) {
-      args.push(
-        ...this._filterComplex.flatMap((f) => ["-filter_complex", `"${f}"`]),
-      );
-    }
-
     // Pass-specific logic
     switch (pass) {
       case 1: {
@@ -647,6 +641,12 @@ export class FFmpegBuilder<
           }
         }
       }
+    }
+
+    if (FFmpegBuilder.changed(this._filterComplex)) {
+      args.push(
+        ...this._filterComplex.flatMap((f) => ["-filter_complex", `"${f}"`]),
+      );
     }
 
     // Audio

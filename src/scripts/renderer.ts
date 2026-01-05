@@ -22,6 +22,7 @@ let internals: {
     audioTracks: number[],
     is10bit: boolean,
     bitrateratio?: number,
+    speed?: number,
   ) => Promise<string>;
   moveMetadata: (file: string, nbTracks: number) => Promise<string>;
   confirmation: (text: string) => Promise<void>;
@@ -123,9 +124,16 @@ const main = async () => {
   let numberOfUncompressableFiles = 0;
 
   const argv = await internals.argv();
-  const ratioArg = argv.find((a) => a.startsWith("/bitrateratio="));
+
+  // Bitrate multiplicator support
+  const ratioArg = argv.find((v) => v.startsWith("/bitrateratio="));
   const ratioVal = ratioArg ? Number(ratioArg.split("=")[1]) : NaN;
   const bitrateRatio = Number.isFinite(ratioVal) && ratioVal > 0 ? ratioVal : 1;
+
+  // Speed support
+  const speedArg = argv.find((v) => v.startsWith("/speed="));
+  const speedVal = speedArg ? Number(speedArg.split("=")[1]) : NaN;
+  const speed = Number.isFinite(speedVal) && speedVal > 0 ? speedVal : 1;
 
   // Iterate over all the retrieved files
   for (const [idx, file] of files.entries()) {
@@ -165,6 +173,7 @@ const main = async () => {
         newFile.audioTracks,
         newFile.is10bit,
         bitrateRatio,
+        speed,
       );
     } else {
       updateMessage(`\nPréparation pour le partage...`, true, Mode.Append);

@@ -225,15 +225,21 @@ app.whenReady().then(() => {
     audioTracks: number[],
     is10bit: boolean,
     bitrateratio: number = 1,
+    speed: number = 1,
   ) => {
+    // Calculate audio bitrate
     const audioBitratePerTrack = 128; // kbps
     const mainAudioBitrate = 192; // kbps for the first track
-
-    // Calculate total audio bitrate
     const audioBitrate =
       mainAudioBitrate + (audioTracks.length - 1) * audioBitratePerTrack;
+
+    // Calculate video bitrate
     const scaledBitrate = Math.round(bitrate * bitrateratio);
-    const videoBitrate = scaledBitrate - audioBitrate;
+    // When speed > 1 : we multiply bitrate by speed
+    // When speed < 1 : we still increase bitrate but by a reduced factor
+    const bitrateWithSpeed =
+      scaledBitrate * (speed >= 1 ? speed : 1 + 0.05 * (1 - speed));
+    const videoBitrate = bitrateWithSpeed - audioBitrate;
 
     const type = FFmpegArgument.Formats.MP4;
     let finalFile;
@@ -270,8 +276,6 @@ app.whenReady().then(() => {
           ),
         )
         .audioCodec(args.aCodec)
-        .tracks(FFmpegArgument.Track.AllVideosMonoInput) // all? or only at index 0?
-        .tracks(FFmpegArgument.Track.AllAudiosMonoInput, false)
         .outputFormat(type)
         .streamingOptimization();
 
@@ -292,6 +296,41 @@ app.whenReady().then(() => {
             ),
           );
       });
+
+      if (speed === 1) {
+        builder
+          .tracks(FFmpegArgument.Track.AllVideosMonoInput) // all? or only at index 0?
+          .tracks(FFmpegArgument.Track.AllAudiosMonoInput, false);
+      }
+      // Speed up video
+      else {
+        const video = "v_newspeed";
+        const audios = audioTracks.map((_, i) => `a${i}_newspeed`);
+
+        const atempo = ((s) => {
+          const filters = [];
+          while (s > 2.0) {
+            filters.push("atempo=2.0");
+            s /= 2.0;
+          }
+          while (s < 0.5) {
+            filters.push("atempo=0.5");
+            s *= 2.0;
+          }
+          filters.push(`atempo=${s}`);
+          return filters.join(",");
+        })(speed);
+
+        builder
+          .filterComplex(
+            `[0:v]setpts=${1 / speed}*PTS[${video}];${audios.map((t, i) => `[0:a:${i}]${atempo}[${t}]`)}`,
+          )
+          .tracks(FFmpegArgument.Track.customTrack(`[${video}]`));
+
+        audios.forEach((audio) =>
+          builder.tracks(FFmpegArgument.Track.customTrack(`[${audio}]`)),
+        );
+      }
 
       if (args.hw) {
         // Hardware acceleration don't support 2-pass
@@ -379,7 +418,8 @@ app.whenReady().then(() => {
       audioTracks: number[],
       is10bit: boolean,
       bitrateratio: number,
-    ) => reduceSize(file, bitrate, audioTracks, is10bit, bitrateratio),
+      speed: number,
+    ) => reduceSize(file, bitrate, audioTracks, is10bit, bitrateratio, speed),
   );
   ipcMain.handle("moveMetadata", (_, file: string, nbTracks: number) =>
     moveMetadata(file, nbTracks),

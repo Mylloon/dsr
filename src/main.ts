@@ -381,7 +381,7 @@ app.whenReady().then(() => {
       .videoCodec(FFmpegArgument.Codecs.Video.Copy)
       .audioCodec(FFmpegArgument.Codecs.Audio.Copy)
       .tracks(FFmpegArgument.Track.AllVideosMonoInput)
-      .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
+      .tracks(FFmpegArgument.Track.AllAudiosMonoInput, false)
       .streamingOptimization();
 
     if (nbTracks === metadataTitles.length) {

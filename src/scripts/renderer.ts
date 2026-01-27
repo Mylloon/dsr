@@ -38,10 +38,12 @@ const getFiles = async () => {
   const currentDir = await internals.cwd();
   const argvFiles = (
     await Promise.all(
-      (await internals.argv()).slice(1).map(internals.resolveSymlink),
+      (await internals.argv())
+        .slice(1)
+        .filter((file) => file !== ".")
+        .map(internals.resolveSymlink),
     )
   )
-    .filter((file) => file !== ".")
     // Remove commands args
     // Assumption: All input files should share the same "currentDirectory"
     .filter((element) => element.startsWith(currentDir))

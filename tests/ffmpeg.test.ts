@@ -23,7 +23,7 @@ describe("FFmpeg builder", () => {
       assert.strictEqual(
         new FFmpegBuilder(binary)
           .input(input)
-          .output(output)
+          .output(output, FFmpegArgument.Formats.MP4)
           .videoCodec(FFmpegArgument.Codecs.Video.H264)
           .bitrate(
             FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
@@ -34,7 +34,6 @@ describe("FFmpeg builder", () => {
           .audioCodec(FFmpegArgument.Codecs.Audio.AAC)
           .tracks(FFmpegArgument.Track.AllVideosMonoInput)
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
-          .outputFormat(FFmpegArgument.Formats.MP4)
           .toString(),
         `"${binary}" -i "${input}" -c:v libx264 -b:v ${videoBitrate}k -c:a aac -map 0:v -map 0:a -f mp4 "${output}"`,
       );
@@ -47,7 +46,7 @@ describe("FFmpeg builder", () => {
       assert.strictEqual(
         new FFmpegBuilder(binary)
           .input(input)
-          .output(output)
+          .output(output, FFmpegArgument.Formats.MP4)
           .videoCodec(FFmpegArgument.Codecs.Video.H264)
           .bitrate(
             FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
@@ -58,7 +57,6 @@ describe("FFmpeg builder", () => {
           .audioCodec(FFmpegArgument.Codecs.Audio.AAC)
           .tracks(FFmpegArgument.Track.AllVideosMonoInput)
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
-          .outputFormat(FFmpegArgument.Formats.MP4)
           .twopass(FFmpegArgument.SystemNULL.Windows)
           .toString(),
         `"${binary}" -i "${input}" -c:v libx264 -b:v ${videoBitrate}k -pass 1 -an -f null NUL && "${binary}" -i "${input}" -c:v libx264 -b:v ${videoBitrate}k -pass 2 -c:a aac -map 0:v -map 0:a -f mp4 "${output}"`,
@@ -72,7 +70,7 @@ describe("FFmpeg builder", () => {
       assert.strictEqual(
         new FFmpegBuilder(binary)
           .input(input)
-          .output(output)
+          .output(output, FFmpegArgument.Formats.MP4)
           .videoCodec(FFmpegArgument.Codecs.Video.H265)
           .bitrate(
             FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
@@ -83,7 +81,6 @@ describe("FFmpeg builder", () => {
           .audioCodec(FFmpegArgument.Codecs.Audio.AAC)
           .tracks(FFmpegArgument.Track.AllVideosMonoInput)
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
-          .outputFormat(FFmpegArgument.Formats.MP4)
           .twopass(FFmpegArgument.SystemNULL.Windows)
           .toString(),
         `"${binary}" -i "${input}" -c:v libx265 -b:v ${videoBitrate}k -x265-params pass=1 -an -f null NUL && "${binary}" -i "${input}" -c:v libx265 -b:v ${videoBitrate}k -x265-params pass=2 -c:a aac -map 0:v -map 0:a -f mp4 "${output}"`,
@@ -97,7 +94,7 @@ describe("FFmpeg builder", () => {
       assert.strictEqual(
         new FFmpegBuilder(binary)
           .input(input)
-          .output(output)
+          .output(output, FFmpegArgument.Formats.MP4)
           .videoCodec(FFmpegArgument.Codecs.Video.AV1)
           .bitrate(
             FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
@@ -108,7 +105,6 @@ describe("FFmpeg builder", () => {
           .audioCodec(FFmpegArgument.Codecs.Audio.AAC)
           .tracks(FFmpegArgument.Track.AllVideosMonoInput)
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
-          .outputFormat(FFmpegArgument.Formats.MP4)
           .twopass(FFmpegArgument.SystemNULL.Windows)
           .toString(),
         `"${binary}" -i "${input}" -c:v libaom-av1 -cpu-used 6 -b:v ${videoBitrate}k -pass 1 -an -f null NUL && "${binary}" -i "${input}" -c:v libaom-av1 -cpu-used 6 -b:v ${videoBitrate}k -pass 2 -c:a aac -map 0:v -map 0:a -f mp4 "${output}"`,
@@ -122,7 +118,7 @@ describe("FFmpeg builder", () => {
       assert.strictEqual(
         new FFmpegBuilder(binary)
           .input(input)
-          .output(output)
+          .output(output, FFmpegArgument.Formats.MP4)
           .videoCodec(FFmpegArgument.Codecs.Video.H264)
           .bitrate(
             FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
@@ -133,7 +129,6 @@ describe("FFmpeg builder", () => {
           .audioCodec(FFmpegArgument.Codecs.Audio.AAC)
           .tracks(FFmpegArgument.Track.AllVideosMonoInput)
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
-          .outputFormat(FFmpegArgument.Formats.MP4)
           .hardwareAcceleration(FFmpegArgument.HardwareBackend.DirectX11)
           .toString(),
         `"${binary}" -hwaccel d3d11va -hwaccel_output_format d3d11va -i "${input}" -c:v h264_amf -rc vbr_peak -usage transcoding -maxrate ${videoBitrate}k -bufsize ${videoBitrate * 2}k -b:v ${videoBitrate}k -c:a aac -map 0:v -map 0:a -f mp4 "${output}"`,
@@ -147,7 +142,7 @@ describe("FFmpeg builder", () => {
       assert.strictEqual(
         new FFmpegBuilder(binary)
           .input(input)
-          .output(output)
+          .output(output, FFmpegArgument.Formats.MP4)
           .videoCodec(FFmpegArgument.Codecs.Video.H264)
           .bitrate(
             FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
@@ -158,7 +153,6 @@ describe("FFmpeg builder", () => {
           .audioCodec(FFmpegArgument.Codecs.Audio.AAC)
           .tracks(FFmpegArgument.Track.AllVideosMonoInput)
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
-          .outputFormat(FFmpegArgument.Formats.MP4)
           .hardwareAcceleration(FFmpegArgument.HardwareBackend.VAAPI)
           .toString(),
         `"${binary}" -hwaccel vaapi -hwaccel_output_format vaapi -i "${input}" -c:v h264_vaapi -rc_mode VBR -maxrate ${videoBitrate}k -bufsize ${videoBitrate * 2}k -b:v ${videoBitrate}k -c:a aac -map 0:v -map 0:a -f mp4 "${output}"`,

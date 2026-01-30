@@ -267,7 +267,7 @@ app.whenReady().then(() => {
       const builder = new FFmpegBuilder(ffmpegPath)
         .yes()
         .input(file)
-        .output(finalFile)
+        .output(finalFile, type)
         .videoCodec(args.vCodec)
         .bitrate(
           FFmpegArgument.Stream.Bitrate(
@@ -276,7 +276,6 @@ app.whenReady().then(() => {
           ),
         )
         .audioCodec(args.aCodec)
-        .outputFormat(type)
         .streamingOptimization();
 
       // Compress audio and add metadata

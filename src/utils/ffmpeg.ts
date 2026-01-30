@@ -4,6 +4,14 @@ export namespace FFmpegArgument {
     MP4 = "mp4",
   }
 
+  /** File representation */
+  export interface File {
+    /** Format of the file */
+    format: Formats | undefined;
+    /** Path of the file */
+    path: string;
+  }
+
   /** Null devices */
   export enum SystemNULL {
     Windows = "NUL",
@@ -318,8 +326,8 @@ export class FFmpegBuilder<
   private onWindows = process.platform === "win32";
 
   // State Variables
-  private _input: string[] = [];
-  private _output: string = "";
+  private _input: FFmpegArgument.File[] = [];
+  private _output: FFmpegArgument.File = { path: "", format: undefined };
   private _forceOverwrite: boolean = false;
   private _twoPass: string = null;
   private _hw: FFmpegArgument.HardwareBackend = null;
@@ -332,7 +340,6 @@ export class FFmpegBuilder<
   // Audio/Structure Settings
   private _audioCodec: FFmpegArgument.Codecs.Audio = null;
   private _trackMappings: string[] = [];
-  private _format: string = null;
   private _metadata: FFmpegArgument.Track.MetadataPrintable[] = [];
   private _movFlags: string[] = [];
   private _filterComplex: string[] = [];
@@ -361,18 +368,18 @@ export class FFmpegBuilder<
   /**
    * Required field
    */
-  input(path: string) {
+  input(path: string, format: FFmpegArgument.Formats = undefined) {
     const newBuilder = this.clone<true, HasOutput>();
-    newBuilder._input.push(path);
+    newBuilder._input.push({ path, format });
     return newBuilder;
   }
 
   /**
    * Required field
    */
-  output(path: string) {
+  output(path: string, format: FFmpegArgument.Formats = undefined) {
     const newBuilder = this.clone<HasInput, true>();
-    newBuilder._output = path;
+    newBuilder._output = { path, format };
     return newBuilder;
   }
 
@@ -431,12 +438,6 @@ export class FFmpegBuilder<
     return this;
   }
 
-  /** Change the output video format */
-  outputFormat(format: FFmpegArgument.Formats) {
-    this._format = format;
-    return this;
-  }
-
   /** Applies custom metadata to specific tracks */
   customMetadata(metadata: FFmpegArgument.Track.MetadataPrintable) {
     this._metadata.push(metadata);
@@ -490,7 +491,11 @@ export class FFmpegBuilder<
     }
 
     // Input
-    args.push(...this._input.flatMap((i) => ["-i", `"${i}"`]));
+    args.push(
+      ...this._input.flatMap(({ path, format }) =>
+        (format === undefined ? [] : ["-f", format]).concat("-i", `"${path}"`),
+      ),
+    );
 
     // Video
     if (FFmpegBuilder.changed(this._videoCodec)) {
@@ -668,11 +673,6 @@ export class FFmpegBuilder<
       args.push("-map", map);
     });
 
-    // Formats
-    if (FFmpegBuilder.changed(this._format)) {
-      args.push("-f", this._format);
-    }
-
     // Dispositions
     if (FFmpegBuilder.changed(this._dispositions)) {
       args.push(...this._dispositions.map(String));
@@ -689,7 +689,10 @@ export class FFmpegBuilder<
     }
 
     // Output File
-    args.push(`"${this._output}"`);
+    args.push(
+      ...(this._output.format === undefined ? [] : ["-f", this._output.format]),
+      `"${this._output.path}"`,
+    );
 
     return args.join(" ");
   }

@@ -2,6 +2,7 @@ export namespace FFmpegArgument {
   /** Supported formats */
   export enum Formats {
     MP4 = "mp4",
+    NULL = "null",
   }
 
   /** File representation */
@@ -627,7 +628,7 @@ export class FFmpegBuilder<
 
         // No audio in pass 1
         args.push("-an");
-        args.push("-f", "null");
+        args.push("-f", FFmpegArgument.Formats.NULL);
 
         // Pass 1 output goes to null
         args.push(this._twoPass);

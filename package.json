@@ -20,16 +20,16 @@
   "author": "Mylloon",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@electron-forge/maker-zip": "^7.10",
     "ffmpeg-static": "^5.3",
-    "ffprobe-static": "^3.1",
-    "typescript": "^5.9"
+    "ffprobe-static": "^3.1"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^7.10",
+    "@electron-forge/cli": "^7.11",
+    "@electron-forge/maker-zip": "^7.11",
     "@types/ffprobe-static": "^2.0",
-    "electron": "^39.2",
-    "tsx": "^4.21"
+    "electron": "^40.1",
+    "tsx": "^4.21",
+    "typescript": "^5.9"
   },
   "config": {
     "forge": {

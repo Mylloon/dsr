@@ -11,7 +11,10 @@ describe("FFmpeg builder", () => {
   {
     it("Simple I/O", () => {
       assert.strictEqual(
-        new FFmpegBuilder(binary).input(input).output(output).toString(),
+        new FFmpegBuilder(binary)
+          .input(FFmpegArgument.File(input))
+          .output(FFmpegArgument.File(output))
+          .toString(),
         `"${binary}" -i "${input}" "${output}"`,
       );
     });
@@ -22,8 +25,8 @@ describe("FFmpeg builder", () => {
 
       assert.strictEqual(
         new FFmpegBuilder(binary)
-          .input(input)
-          .output(output, FFmpegArgument.Formats.MP4)
+          .input(FFmpegArgument.File(input))
+          .output(FFmpegArgument.File(output, FFmpegArgument.Formats.MP4))
           .videoCodec(FFmpegArgument.Codecs.Video.H264)
           .bitrate(
             FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
@@ -45,8 +48,8 @@ describe("FFmpeg builder", () => {
 
       assert.strictEqual(
         new FFmpegBuilder(binary)
-          .input(input)
-          .output(output, FFmpegArgument.Formats.MP4)
+          .input(FFmpegArgument.File(input))
+          .output(FFmpegArgument.File(output, FFmpegArgument.Formats.MP4))
           .videoCodec(FFmpegArgument.Codecs.Video.H264)
           .bitrate(
             FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
@@ -69,8 +72,8 @@ describe("FFmpeg builder", () => {
 
       assert.strictEqual(
         new FFmpegBuilder(binary)
-          .input(input)
-          .output(output, FFmpegArgument.Formats.MP4)
+          .input(FFmpegArgument.File(input))
+          .output(FFmpegArgument.File(output, FFmpegArgument.Formats.MP4))
           .videoCodec(FFmpegArgument.Codecs.Video.H265)
           .bitrate(
             FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
@@ -93,8 +96,8 @@ describe("FFmpeg builder", () => {
 
       assert.strictEqual(
         new FFmpegBuilder(binary)
-          .input(input)
-          .output(output, FFmpegArgument.Formats.MP4)
+          .input(FFmpegArgument.File(input))
+          .output(FFmpegArgument.File(output, FFmpegArgument.Formats.MP4))
           .videoCodec(FFmpegArgument.Codecs.Video.AV1)
           .bitrate(
             FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
@@ -117,8 +120,8 @@ describe("FFmpeg builder", () => {
 
       assert.strictEqual(
         new FFmpegBuilder(binary)
-          .input(input)
-          .output(output, FFmpegArgument.Formats.MP4)
+          .input(FFmpegArgument.File(input))
+          .output(FFmpegArgument.File(output, FFmpegArgument.Formats.MP4))
           .videoCodec(FFmpegArgument.Codecs.Video.H264)
           .bitrate(
             FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
@@ -141,8 +144,8 @@ describe("FFmpeg builder", () => {
 
       assert.strictEqual(
         new FFmpegBuilder(binary)
-          .input(input)
-          .output(output, FFmpegArgument.Formats.MP4)
+          .input(FFmpegArgument.File(input))
+          .output(FFmpegArgument.File(output, FFmpegArgument.Formats.MP4))
           .videoCodec(FFmpegArgument.Codecs.Video.H264)
           .bitrate(
             FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
@@ -165,8 +168,8 @@ describe("FFmpeg builder", () => {
       const filter = `[0:a]amerge=inputs=2[${name}]`;
       assert.strictEqual(
         new FFmpegBuilder(binary)
-          .input(input)
-          .output(output)
+          .input(FFmpegArgument.File(input))
+          .output(FFmpegArgument.File(output))
           .videoCodec(FFmpegArgument.Codecs.Video.Copy)
           .tracks(FFmpegArgument.Track.customTrack(`[${name}]`))
           .tracks(FFmpegArgument.Track.AllVideosMonoInput)
@@ -181,9 +184,9 @@ describe("FFmpeg builder", () => {
       const input2 = "in2";
       assert.strictEqual(
         new FFmpegBuilder(binary)
-          .input(input)
-          .input(input2)
-          .output(output)
+          .input(FFmpegArgument.File(input))
+          .input(FFmpegArgument.File(input2))
+          .output(FFmpegArgument.File(output))
           .tracks(
             // Copy all from first input
             FFmpegArgument.Track(undefined, undefined, 0),
@@ -225,8 +228,8 @@ describe("FFmpeg builder", () => {
       const filter = `[0:a:0][0:a:1]amerge=inputs=2[${name}]`;
       assert.strictEqual(
         new FFmpegBuilder(binary)
-          .input(input)
-          .output(output)
+          .input(FFmpegArgument.File(input))
+          .output(FFmpegArgument.File(output))
           .videoCodec(FFmpegArgument.Codecs.Video.Copy)
           .tracks(FFmpegArgument.Track.AllVideosMonoInput)
           .tracks(FFmpegArgument.Track.customTrack(`[${name}]`))
@@ -259,8 +262,8 @@ describe("FFmpeg builder", () => {
       const metadata = ["First", "Second", "Third"];
       assert.strictEqual(
         new FFmpegBuilder(binary)
-          .input(input)
-          .output(output)
+          .input(FFmpegArgument.File(input))
+          .output(FFmpegArgument.File(output))
           .videoCodec(FFmpegArgument.Codecs.Video.Copy)
           .audioCodec(FFmpegArgument.Codecs.Audio.Copy)
           .tracks(FFmpegArgument.Track.AllVideosMonoInput)
@@ -292,8 +295,8 @@ describe("FFmpeg builder", () => {
     it("Optimize video file for streaming", () => {
       assert.strictEqual(
         new FFmpegBuilder(binary)
-          .input(input)
-          .output(output)
+          .input(FFmpegArgument.File(input))
+          .output(FFmpegArgument.File(output))
           .videoCodec(FFmpegArgument.Codecs.Video.Copy)
           .audioCodec(FFmpegArgument.Codecs.Audio.Copy)
           .tracks(FFmpegArgument.Track.AllVideosMonoInput)
@@ -309,13 +312,32 @@ describe("FFmpeg builder", () => {
       const test_codec = "codec_without_acceleration";
       assert.strictEqual(
         new FFmpegBuilder(binary)
-          .input(input)
-          .output(output)
+          .input(FFmpegArgument.File(input))
+          .output(FFmpegArgument.File(output))
           .videoCodec({ default: test_codec })
           .tracks(FFmpegArgument.Track.AllVideosMonoInput)
           .hardwareAcceleration(FFmpegArgument.HardwareBackend.VAAPI)
           .toString(),
         `"${binary}" -i "${input}" -c:v ${test_codec} -map 0:v "${output}"`,
+      );
+    });
+  }
+  {
+    it("Testing VAAPI support", () => {
+      const input_test = "testsrc";
+      const output_test = "-";
+      assert.strictEqual(
+        new FFmpegBuilder(binary)
+          .input(
+            FFmpegArgument.File(input_test, FFmpegArgument.Formats.Libavfilter),
+          )
+          .output(
+            FFmpegArgument.File(output_test, FFmpegArgument.Formats.NULL, 0.1),
+          )
+          .videoCodec(FFmpegArgument.Codecs.Video.H264)
+          .hardwareAcceleration(FFmpegArgument.HardwareBackend.VAAPI, true)
+          .toString(),
+        `"${binary}" -hwaccel vaapi -hwaccel_output_format vaapi -vaapi_device /dev/dri/renderD128 -f lavfi -i "${input_test}" -c:v h264_vaapi -vf format=nv12,hwupload -f null -t 0.1 "${output_test}"`,
       );
     });
   }

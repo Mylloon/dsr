@@ -7,6 +7,7 @@ import {
   deleteFile,
   doesFileExists,
   execute,
+  findOptimalBackend,
   getNewFilename,
   getNumberOfAudioTracks,
   getVideoDuration,
@@ -124,8 +125,8 @@ app.whenReady().then(() => {
         outFile = getNewFilename(file, "(merged audio) ");
 
         const builder = new FFmpegBuilder(ffmpegPath)
-          .input(file)
-          .output(outFile)
+          .input(FFmpegArgument.File(file))
+          .output(FFmpegArgument.File(outFile))
           .videoCodec(FFmpegArgument.Codecs.Video.Copy)
           .tracks(FFmpegArgument.Track.AllVideosMonoInput)
           .tracks(FFmpegArgument.Track.customTrack(`[${name}]`))
@@ -189,7 +190,17 @@ app.whenReady().then(() => {
   const encoderInfo = (isFile10bit: boolean) => {
     const res = parseArgs(process.argv);
 
-    return isFile10bit ? { ...res, hw: null } : res;
+    // No hardware support
+    if (isFile10bit) {
+      return { ...res, hw: null };
+    }
+
+    // User asked for no specific hardware backend
+    if (!res.hw) {
+      res.hw = findOptimalBackend(ffmpegPath, res.vCodec);
+    }
+
+    return res;
   };
 
   /** Export info for frontend */
@@ -266,8 +277,8 @@ app.whenReady().then(() => {
 
       const builder = new FFmpegBuilder(ffmpegPath)
         .yes()
-        .input(file)
-        .output(finalFile, type)
+        .input(FFmpegArgument.File(file))
+        .output(FFmpegArgument.File(finalFile, type))
         .videoCodec(args.vCodec)
         .bitrate(
           FFmpegArgument.Stream.Bitrate(
@@ -375,8 +386,8 @@ app.whenReady().then(() => {
     const finalFile = getNewFilename(file, "Broadcastable - ");
 
     const builder = new FFmpegBuilder(ffmpegPath)
-      .input(file)
-      .output(finalFile)
+      .input(FFmpegArgument.File(file))
+      .output(FFmpegArgument.File(finalFile))
       .videoCodec(FFmpegArgument.Codecs.Video.Copy)
       .audioCodec(FFmpegArgument.Codecs.Audio.Copy)
       .tracks(FFmpegArgument.Track.AllVideosMonoInput)

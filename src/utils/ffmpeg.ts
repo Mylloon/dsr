@@ -2,16 +2,45 @@ export namespace FFmpegArgument {
   /** Supported formats */
   export enum Formats {
     MP4 = "mp4",
+    Libavfilter = "lavfi",
     NULL = "null",
   }
 
   /** File representation */
   export interface File {
-    /** Format of the file */
-    format: Formats | undefined;
     /** Path of the file */
     path: string;
+    /** Options */
+    options: FileOptions;
   }
+
+  /** File options */
+  interface FileOptions {
+    /** Format of the file */
+    format?: Formats;
+    /** Duration */
+    duration?: number;
+
+    /** Convert options to string for FFmpeg */
+    getStringOptions(): string[];
+  }
+
+  /** Create a FFmpeg File */
+  export const File = (
+    path: string,
+    format: Formats = undefined,
+    duration: number = undefined,
+  ): File => ({
+    path,
+    options: {
+      format,
+      duration,
+      getStringOptions: () =>
+        (format === undefined ? [] : ["-f", format]).concat(
+          duration === undefined ? [] : ["-t", `${duration}`],
+        ),
+    },
+  });
 
   /** Null devices */
   export enum SystemNULL {
@@ -328,10 +357,11 @@ export class FFmpegBuilder<
 
   // State Variables
   private _input: FFmpegArgument.File[] = [];
-  private _output: FFmpegArgument.File = { path: "", format: undefined };
+  private _output: FFmpegArgument.File = FFmpegArgument.File("");
   private _forceOverwrite: boolean = false;
   private _twoPass: string = null;
   private _hw: FFmpegArgument.HardwareBackend = null;
+  private _hw_debug: boolean = false;
 
   // Video Settings
   private _videoCodec: FFmpegArgument.Codecs.Video = null;
@@ -369,18 +399,18 @@ export class FFmpegBuilder<
   /**
    * Required field
    */
-  input(path: string, format: FFmpegArgument.Formats = undefined) {
+  input(file: FFmpegArgument.File) {
     const newBuilder = this.clone<true, HasOutput>();
-    newBuilder._input.push({ path, format });
+    newBuilder._input.push(file);
     return newBuilder;
   }
 
   /**
    * Required field
    */
-  output(path: string, format: FFmpegArgument.Formats = undefined) {
+  output(file: FFmpegArgument.File) {
     const newBuilder = this.clone<HasInput, true>();
-    newBuilder._output = { path, format };
+    newBuilder._output = file;
     return newBuilder;
   }
 
@@ -391,8 +421,21 @@ export class FFmpegBuilder<
   }
 
   /** Enable hardware acceleration with specific driver calls */
-  hardwareAcceleration(driver: FFmpegArgument.HardwareBackend) {
+  hardwareAcceleration(
+    driver: FFmpegArgument.HardwareBackend,
+    debug: boolean = false,
+  ) {
     this._hw = driver;
+    this._hw_debug = debug;
+
+    if (debug) {
+      // In order to work, we need specific video filters
+      this._videoFilters.push(
+        { default: "format=nv12" },
+        { default: "hwupload" },
+      );
+    }
+
     return this;
   }
 
@@ -488,13 +531,21 @@ export class FFmpegBuilder<
         // Specific outpout format on Linux
         hw.push(...["-hwaccel_output_format", this._hw]);
       }
+      if (this._hw_debug) {
+        // Add additionnal initialization
+        switch (this._hw) {
+          case FFmpegArgument.HardwareBackend.VAAPI: {
+            hw.push("-vaapi_device", "/dev/dri/renderD128");
+          }
+        }
+      }
       args.push(...hw);
     }
 
     // Input
     args.push(
-      ...this._input.flatMap(({ path, format }) =>
-        (format === undefined ? [] : ["-f", format]).concat("-i", `"${path}"`),
+      ...this._input.flatMap(({ path, options }) =>
+        options.getStringOptions().concat("-i", `"${path}"`),
       ),
     );
 
@@ -557,7 +608,8 @@ export class FFmpegBuilder<
             : [];
         })();
 
-        if (this._videoCodec[this._hw]) {
+        // Do not add thoses flags if we are testing hardware support
+        if (!this._hw_debug && this._videoCodec[this._hw]) {
           switch (this._hw) {
             case FFmpegArgument.HardwareBackend.Cuda: {
               args.push("-rc", "vbr");
@@ -691,7 +743,7 @@ export class FFmpegBuilder<
 
     // Output File
     args.push(
-      ...(this._output.format === undefined ? [] : ["-f", this._output.format]),
+      ...this._output.options.getStringOptions(),
       `"${this._output.path}"`,
     );
 

@@ -4,7 +4,7 @@ import path = require("path");
 import { existsSync, unlink } from "fs";
 
 import { BrowserWindow } from "electron";
-import { FFmpegArgument } from "./ffmpeg";
+import { FFmpegArgument, FFmpegBuilder } from "./ffmpeg";
 
 import ffprobe = require("ffprobe-static");
 const ffprobePath = ffprobe.path.replace("app.asar", "app.asar.unpacked");
@@ -93,3 +93,38 @@ export const outputType = (file: string, type: FFmpegArgument.Formats) =>
     path.dirname(file),
     path.basename(file, path.extname(file)) + "." + type,
   );
+
+/** Find a compatible GPU backend */
+export const findOptimalBackend = (
+  ffmpegPath: string,
+  codec: FFmpegArgument.Codecs.Video,
+) => {
+  for (const backend of Object.values(FFmpegArgument.HardwareBackend)) {
+    if (!codec[backend as keyof typeof codec]) {
+      continue; // Unsupported backend for selected codec
+    }
+
+    const builder = new FFmpegBuilder(ffmpegPath)
+      .input(FFmpegArgument.File("testsrc", FFmpegArgument.Formats.Libavfilter))
+      .output(FFmpegArgument.File("-", FFmpegArgument.Formats.NULL, 0.1))
+      .videoCodec(codec);
+
+    switch (backend) {
+      case FFmpegArgument.HardwareBackend.VAAPI:
+      case FFmpegArgument.HardwareBackend.Vulkan: {
+        builder.hardwareAcceleration(backend, true);
+        break;
+      }
+      default: {
+        builder.hardwareAcceleration(backend);
+      }
+    }
+
+    try {
+      child_process.execSync(builder.toString(), { stdio: "ignore" });
+      return backend;
+    } catch (_) {}
+  }
+
+  return undefined;
+};

@@ -26,7 +26,8 @@ You can add thoses flags in the `Target` field of your Windows shortcut.
 | `/nitro`          | Increase the file limit to 500Mo                        |
 | `/nitrobasic`     | Increase the file limit to 50Mo                         |
 |                   |                                                         |
-| `/nvidia`         | Use you NVidia GPU with NVenc                           |
+| `/cpu`            | Use your CPU                                            |
+| `/nvidia`         | Use your NVidia GPU with NVenc                          |
 | `/amd`            | Use your AMD GPU with DX11 on Windows or VAAPI on Linux |
 | `/qsv`            | Use your Intel (A\|G)PU with QSV API                    |
 | `/vulkan`         | Use your GPU with Vulkan API                            |
@@ -46,18 +47,18 @@ You can add thoses flags in the `Target` field of your Windows shortcut.
 
 - [x] KISS interface
   - [x] Support drag&drop into the icon
+  - [x] Defaults to GPU encoder
 - [x] Keep the video under discord limitation
   - [x] If already under the limit, the file won't be compressed
-  - [x] Defaults to H.264 CPU encoder
-  - [x] GPUs support
   - [x] Nitro suppport
 - [x] Merge 2 audio files into one track when recorded with system audio and microphone
       split up, while keeping the original ones (with conveniant metadata)
   - [x] Works also with file with only one or more than 2 audio track, by doing
         nothing
-- [x] Support multiples files at once
+- [x] Flexible
+  - [x] Support multiples files at once
+  - [x] Customizable bitrate
 - [x] Always optimize for video streaming
-- [x] Customizable bitrate
 
 <!--
 ## Package the app for Windows on Linux

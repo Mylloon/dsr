@@ -196,7 +196,7 @@ app.whenReady().then(() => {
     }
 
     // User asked for no specific hardware backend
-    if (!res.hw) {
+    if (res.hw === undefined) {
       res.hw = findOptimalBackend(ffmpegPath, res.vCodec);
     }
 

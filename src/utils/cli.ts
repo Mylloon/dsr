@@ -7,7 +7,8 @@ const codecArgs: Record<string, FFmpegArgument.Codecs.Video> = {
   "/vp9": FFmpegArgument.Codecs.Video.VP9,
 };
 
-const hwArgs: Record<string, FFmpegArgument.HardwareBackend> = {
+const backendArgs: Record<string, FFmpegArgument.HardwareBackend | null> = {
+  "/cpu": null,
   "/nvidia": FFmpegArgument.HardwareBackend.Cuda,
   "/amd":
     process.platform === "win32"
@@ -20,7 +21,12 @@ const hwArgs: Record<string, FFmpegArgument.HardwareBackend> = {
 type Args = {
   vCodec: FFmpegArgument.Codecs.Video;
   aCodec: FFmpegArgument.Codecs.Audio;
-  hw: FFmpegArgument.HardwareBackend | null;
+  /**
+   * - Backend specified => will use it
+   * - `null` => will use CPU
+   * - `undefined` => automatically find a compatible GPU backend
+   */
+  hw: FFmpegArgument.HardwareBackend | null | undefined;
 };
 
 // TODO: Parse the other arguments here
@@ -31,8 +37,8 @@ export const parseArgs = (argv: string[]) =>
       if (curr in codecArgs) {
         return { ...acc, vCodec: codecArgs[curr] };
       }
-      if (curr in hwArgs) {
-        return { ...acc, hw: hwArgs[curr] };
+      if (curr in backendArgs) {
+        return { ...acc, hw: backendArgs[curr] };
       }
       return acc;
     },

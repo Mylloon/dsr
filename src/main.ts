@@ -16,6 +16,7 @@ import {
   outputType,
   printAndDevTool,
   processes,
+  testBackend,
 } from "./utils/misc";
 
 import path = require("path");
@@ -193,6 +194,13 @@ app.whenReady().then(() => {
     // No hardware support
     if (isFile10bit) {
       return { ...res, hw: null };
+    }
+
+    // User asked for a specific hardware backend
+    if (res.hw && !testBackend(ffmpegPath, res.hw)) {
+      // CPU fallback
+      // INFO: We could also reset to `undefined` to automatically research a suitable GPU backend
+      res.hw = null;
     }
 
     // User asked for no specific hardware backend

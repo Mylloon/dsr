@@ -99,32 +99,39 @@ export const findOptimalBackend = (
   ffmpegPath: string,
   codec: FFmpegArgument.Codecs.Video,
 ) => {
-  for (const backend of Object.values(FFmpegArgument.HardwareBackend)) {
-    if (!codec[backend as keyof typeof codec]) {
-      continue; // Unsupported backend for selected codec
+  return (
+    Object.values(FFmpegArgument.HardwareBackend)
+      // Backend support for selected codec
+      .filter((backend) => codec[backend as keyof typeof codec])
+      .find((backend) => testBackend(ffmpegPath, backend))
+  );
+};
+
+/** Test whenever the asked backend is supported */
+export const testBackend = (
+  ffmpegBinary: string,
+  backend: FFmpegArgument.HardwareBackend,
+) => {
+  const builder = new FFmpegBuilder(ffmpegBinary)
+    .input(FFmpegArgument.File("testsrc", FFmpegArgument.Formats.Libavfilter))
+    .output(FFmpegArgument.File("-", FFmpegArgument.Formats.NULL, 0.1))
+    .videoCodec(FFmpegArgument.Codecs.Video.H264);
+
+  switch (backend) {
+    case FFmpegArgument.HardwareBackend.VAAPI:
+    case FFmpegArgument.HardwareBackend.Vulkan: {
+      builder.hardwareAcceleration(backend, true);
+      break;
     }
-
-    const builder = new FFmpegBuilder(ffmpegPath)
-      .input(FFmpegArgument.File("testsrc", FFmpegArgument.Formats.Libavfilter))
-      .output(FFmpegArgument.File("-", FFmpegArgument.Formats.NULL, 0.1))
-      .videoCodec(codec);
-
-    switch (backend) {
-      case FFmpegArgument.HardwareBackend.VAAPI:
-      case FFmpegArgument.HardwareBackend.Vulkan: {
-        builder.hardwareAcceleration(backend, true);
-        break;
-      }
-      default: {
-        builder.hardwareAcceleration(backend);
-      }
+    default: {
+      builder.hardwareAcceleration(backend);
     }
-
-    try {
-      child_process.execSync(builder.toString(), { stdio: "ignore" });
-      return backend;
-    } catch (_) {}
   }
 
-  return undefined;
+  try {
+    child_process.execSync(builder.toString(), { stdio: "ignore" });
+    return true;
+  } catch (_) {}
+
+  return false;
 };

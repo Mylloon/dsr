@@ -294,7 +294,7 @@ app.whenReady().then(() => {
             bitrateKB(videoBitrate),
           ),
         )
-        .audioCodec(args.aCodec)
+        .audioCodec(FFmpegArgument.Codecs.Audio.AAC)
         .streamingOptimization();
 
       // Compress audio and add metadata
@@ -447,6 +447,7 @@ app.whenReady().then(() => {
   ipcMain.handle("wantedEncoder", (_, is10Bit: boolean) =>
     exportEncoderInfo(is10Bit),
   );
+  ipcMain.handle("getArguments", () => parseArgs(process.argv));
 });
 
 app.on("window-all-closed", () => {

@@ -38,4 +38,5 @@ contextBridge.exposeInMainWorld("internals", {
     ipcRenderer.invoke("wantedEncoder", isFile10bit),
   exit: () => ipcRenderer.invoke("exit"),
   confirmation: (text: string) => ipcRenderer.invoke("confirmation", text),
+  getArguments: () => ipcRenderer.invoke("getArguments"),
 });

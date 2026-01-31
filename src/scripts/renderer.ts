@@ -147,22 +147,22 @@ const main = async () => {
     );
     const newFile = await internals.mergeAudio(file);
     let finalTitle = newFile.title;
-    updateMessage(
-      `${counter} - Taille actuelle : ~${Math.round(newFile.size)}Mio`,
-    );
+    const fileSizeMessage = `${counter} - Taille actuelle : ~${Math.round(newFile.size)}Mio`;
+    updateMessage(fileSizeMessage);
 
     // Compress video if needed
     if (newFile.size > maxSizeDiscord) {
       const targetSize = maxSizeDiscord - 2; // keep some room
 
+      updateMessage("\nSélection de l'encodeur...", true, Mode.Append);
+
       const { codec, hw } = await internals.wantedEncoder(newFile.is10bit);
 
       updateMessage(
-        `\nFichier trop lourd, compression en cours avec ${codec}` +
+        `${fileSizeMessage}\nFichier trop lourd, compression en cours avec ${codec}` +
           (hw ? "/GPU" : "") +
           `... (taille visée : ${maxSizeDiscord}Mo)`,
         true,
-        Mode.Append,
       );
 
       // https://trac.ffmpeg.org/wiki/Encode/H.264#twopass

@@ -188,7 +188,7 @@ app.whenReady().then(() => {
   };
 
   /** Returns selected encoder and if we use hardware acceleration */
-  const encoderInfo = (isFile10bit: boolean) => {
+  const encoderInfo = async (isFile10bit: boolean) => {
     const res = parseArgs(process.argv);
 
     // No hardware support
@@ -197,7 +197,7 @@ app.whenReady().then(() => {
     }
 
     // User asked for a specific hardware backend
-    if (res.hw && !testBackend(ffmpegPath, res.hw)) {
+    if (res.hw && !(await testBackend(ffmpegPath, res.hw))) {
       // CPU fallback
       // INFO: We could also reset to `undefined` to automatically research a suitable GPU backend
       res.hw = null;
@@ -205,15 +205,15 @@ app.whenReady().then(() => {
 
     // User asked for no specific hardware backend
     if (res.hw === undefined) {
-      res.hw = findOptimalBackend(ffmpegPath, res.vCodec);
+      res.hw = await findOptimalBackend(ffmpegPath, res.vCodec);
     }
 
     return res;
   };
 
   /** Export info for frontend */
-  const exportEncoderInfo = (isFile10bit: boolean) => {
-    const data = encoderInfo(isFile10bit);
+  const exportEncoderInfo = async (isFile10bit: boolean) => {
+    const data = await encoderInfo(isFile10bit);
 
     return {
       codec: Object.entries(FFmpegArgument.Codecs.Video).find(([, codec]) => {
@@ -281,7 +281,7 @@ app.whenReady().then(() => {
     if (videoBitrate > 0) {
       finalFile = outputType(getNewFilename(file, "Compressed - "), type);
 
-      const args = encoderInfo(is10bit);
+      const args = await encoderInfo(is10bit);
 
       const builder = new FFmpegBuilder(ffmpegPath)
         .yes()

@@ -1,15 +1,16 @@
-import child_process = require("child_process");
 import path = require("path");
 
-import { existsSync, unlink } from "fs";
-
+import { ChildProcess, exec, execSync } from "child_process";
 import { BrowserWindow } from "electron";
+import { existsSync, unlink } from "fs";
+import { promisify } from "util";
+
 import { FFmpegArgument, FFmpegBuilder } from "./ffmpeg";
 
 import ffprobe = require("ffprobe-static");
 const ffprobePath = ffprobe.path.replace("app.asar", "app.asar.unpacked");
 
-export const processes: child_process.ChildProcess[] = [];
+export const processes: ChildProcess[] = [];
 
 /** Create a new filename from the OG one */
 export const getNewFilename = (ogFile: string, part: string) => {
@@ -20,14 +21,14 @@ export const getNewFilename = (ogFile: string, part: string) => {
 /** Return the duration of a video in second */
 export const getVideoDuration = (file: string) => {
   const command = `"${ffprobePath}" -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${file}"`;
-  const durationString = child_process.execSync(command).toString().trim();
+  const durationString = execSync(command).toString().trim();
   return parseFloat(durationString);
 };
 
 /** Return the number of audio tracks */
 export const getNumberOfAudioTracks = (file: string): number[] => {
   const command = `"${ffprobePath}" -v error -show_entries stream=bit_rate -select_streams a -of json "${file}"`;
-  const result = child_process.execSync(command, { encoding: "utf8" });
+  const result = execSync(command, { encoding: "utf8" });
   return JSON.parse(result).streams.map(
     (v: { bit_rate: string }) => Number(v.bit_rate) / 1000,
   );
@@ -36,7 +37,7 @@ export const getNumberOfAudioTracks = (file: string): number[] => {
 /** Return if the file have 10 bit pixel encoding */
 export const is10bit = (file: string): boolean => {
   const command = `"${ffprobePath}" -v error -show_entries stream=pix_fmt -select_streams v -of json "${file}"`;
-  const result = child_process.execSync(command, { encoding: "utf8" });
+  const result = execSync(command, { encoding: "utf8" });
   return JSON.parse(result)
     .streams.map((v: { pix_fmt: string }) => v.pix_fmt === "yuv420p")
     .every((v: boolean) => !v);
@@ -53,7 +54,7 @@ export const execute = (
   command: string,
 ): Promise<{ stdout: string; stderr: string }> => {
   return new Promise((resolve, reject) => {
-    const process = child_process.exec(command, (error, stdout, stderr) => {
+    const process = exec(command, (error, stdout, stderr) => {
       if (error) {
         reject(error);
       } else {
@@ -94,21 +95,29 @@ export const outputType = (file: string, type: FFmpegArgument.Formats) =>
     path.basename(file, path.extname(file)) + "." + type,
   );
 
-/** Find a compatible GPU backend */
-export const findOptimalBackend = (
+/** Find a compatible GPU backend
+ *
+ * @returns `undefined` if no suitable backend has been found
+ */
+export const findOptimalBackend = async (
   ffmpegPath: string,
   codec: FFmpegArgument.Codecs.Video,
 ) => {
-  return (
-    Object.values(FFmpegArgument.HardwareBackend)
-      // Backend support for selected codec
-      .filter((backend) => codec[backend as keyof typeof codec])
-      .find((backend) => testBackend(ffmpegPath, backend))
+  const backends = Object.values(FFmpegArgument.HardwareBackend).filter(
+    (backend) => codec[backend as keyof typeof codec],
   );
+
+  for (const backend of backends) {
+    if (await testBackend(ffmpegPath, backend)) {
+      return backend;
+    }
+  }
+
+  return undefined;
 };
 
 /** Test whenever the asked backend is supported */
-export const testBackend = (
+export const testBackend = async (
   ffmpegBinary: string,
   backend: FFmpegArgument.HardwareBackend,
 ) => {
@@ -128,10 +137,7 @@ export const testBackend = (
     }
   }
 
-  try {
-    child_process.execSync(builder.toString(), { stdio: "ignore" });
-    return true;
-  } catch (_) {}
-
-  return false;
+  return promisify(exec)(builder.toString())
+    .then(() => true)
+    .catch(() => false);
 };

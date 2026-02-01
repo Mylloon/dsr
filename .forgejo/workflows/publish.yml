@@ -1,22 +1,35 @@
 name: Publish to package managers
 
 on:
+  workflow_dispatch:
   release:
     types: [published]
+
+env:
+  WINGET_OWNER: Mylloon
 
 jobs:
   winget:
     runs-on: docker
     container:
-      image: node
+      image: ghcr.io/catthehacker/ubuntu:act-latest
 
     steps:
-      - name: Update winget package
-        uses: vedantmgoyal9/winget-releaser@main
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          identifier: Mylloon.dsr
-          installers-regex: "*-win32-x64-*.zip$"
-          token: ${{ secrets.WINGET_TOKEN }}
+          cache: false
+          target: x86_64-unknown-linux-gnu
+
+      - name: Update Packages
+        uses: Mylloon/winget-updater@cb1a2cf4a0cf697060d094098b6c1308b47a6b4c
+        with:
+          komac-token: ${{ secrets.WINGET_TOKEN }}
+          identifier: "Mylloon.dsr"
+          repo: "Anri/dsr"
+          github_url: https://git.mylloon.fr/
+          url: "https://git.mylloon.fr/Anri/dsr/releases/download/{VERSION}/dsr-win32-x64-{VERSION}.zip"
+          custom-fork-owner: ${{ env.WINGET_OWNER }}
 
   aur:
     runs-on: docker
@@ -25,8 +38,9 @@ jobs:
 
     steps:
       - name: Update AUR package
-        uses: ATiltedTree/create-aur-release@v1
+        uses: varabyte/update-aur-package@572e31b1972fa289a27b1926c06a489eb89c7fd7
         with:
+          version: ${{ forgejo.ref_name }}
           package_name: dsr
           commit_username: "Forgejo Action"
           commit_email: forgejo@noreply.git.mylloon.fr

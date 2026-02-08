@@ -18,29 +18,53 @@ export const getNewFilename = (ogFile: string, part: string) => {
   return path.join(oldFile.dir, `${part}`.concat(oldFile.base));
 };
 
-/** Return the duration of a video in second */
-export const getVideoDuration = (file: string) => {
-  const command = `"${ffprobePath}" -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${file}"`;
-  const durationString = execSync(command).toString().trim();
-  return parseFloat(durationString);
-};
-
-/** Return the number of audio tracks */
-export const getNumberOfAudioTracks = (file: string): number[] => {
-  const command = `"${ffprobePath}" -v error -show_entries stream=bit_rate -select_streams a -of json "${file}"`;
-  const result = execSync(command, { encoding: "utf8" });
-  return JSON.parse(result).streams.map(
-    (v: { bit_rate: string }) => Number(v.bit_rate) / 1000,
+/** Retrieve various informations about a video file */
+export const fetchMetadata = (file: string) => {
+  const data = JSON.parse(
+    execSync(
+      `"${ffprobePath}" -v error \
+    -show_entries format=duration \
+    -show_entries stream=index,codec_type,bit_rate,pix_fmt,width,height,r_frame_rate \
+    -of json "${file}"`,
+      { encoding: "utf8" },
+    ),
   );
-};
 
-/** Return if the file have 10 bit pixel encoding */
-export const is10bit = (file: string): boolean => {
-  const command = `"${ffprobePath}" -v error -show_entries stream=pix_fmt -select_streams v -of json "${file}"`;
-  const result = execSync(command, { encoding: "utf8" });
-  return JSON.parse(result)
-    .streams.map((v: { pix_fmt: string }) => v.pix_fmt === "yuv420p")
-    .every((v: boolean) => !v);
+  const duration = parseFloat(data.format.duration);
+
+  const audioBitrates: number[] = data.streams
+    .filter((s: any) => s.codec_type === FFmpegArgument.Stream.Type.Audio.type)
+    .map((s: any) => Number(s.bit_rate) / 1000);
+
+  const is10bit: boolean = data.streams
+    .filter((s: any) => s.codec_type === FFmpegArgument.Stream.Type.Video.type)
+    .every((s: any) => s.pix_fmt !== "yuv420p");
+
+  const width: number = data.streams
+    .filter((s: any) => s.codec_type === FFmpegArgument.Stream.Type.Video.type)
+    .find((s: any) => s.width)?.width;
+
+  const height: number = data.streams
+    .filter((s: any) => s.codec_type === FFmpegArgument.Stream.Type.Video.type)
+    .find((s: any) => s.height)?.height;
+
+  const framerate: number = (() => {
+    const [numerator, denominator] = data.streams
+      .find((s: any) => s.codec_type === "video" && s.r_frame_rate)
+      .r_frame_rate.split("/")
+      .map(Number);
+
+    return denominator ? numerator / denominator : numerator;
+  })();
+
+  return {
+    duration,
+    audioBitrates,
+    is10bit,
+    width,
+    height,
+    framerate,
+  };
 };
 
 /** Print an error to the console and open the dev tool panel */

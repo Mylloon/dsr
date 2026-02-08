@@ -15,12 +15,18 @@ let internals: {
     size: number;
     audioTracks: number[];
     is10bit: boolean;
+    width: number;
+    height: number;
+    framerate: number;
   }>;
   reduceSize: (
     file: string,
     bitrate: number,
     audioTracks: number[],
     is10bit: boolean,
+    width: number,
+    height: number,
+    framerate: number,
     bitrateratio?: number,
     speed?: number,
   ) => Promise<string>;
@@ -152,6 +158,9 @@ const main = async () => {
         bitrate,
         newFile.audioTracks,
         newFile.is10bit,
+        newFile.width,
+        newFile.height,
+        newFile.framerate,
         args.bitrateRatio,
         args.speed,
       );

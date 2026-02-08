@@ -7,11 +7,9 @@ import {
   deleteFile,
   doesFileExists,
   execute,
+  fetchMetadata,
   findOptimalBackend,
   getNewFilename,
-  getNumberOfAudioTracks,
-  getVideoDuration,
-  is10bit,
   joinPaths,
   outputType,
   printAndDevTool,
@@ -113,8 +111,10 @@ app.whenReady().then(() => {
   const mergeAudio = async (file: string) => {
     let outFile: string;
 
-    let audioTracks = getNumberOfAudioTracks(file);
-    const pixelFmt10bit_check = is10bit(file);
+    const fileMetadata = fetchMetadata(file);
+
+    let audioTracks = fileMetadata.audioBitrates;
+    const pixelFmt10bit_check = fileMetadata.is10bit;
 
     switch (audioTracks.length) {
       case 2:
@@ -129,10 +129,10 @@ app.whenReady().then(() => {
           .input(FFmpegArgument.File(file))
           .output(FFmpegArgument.File(outFile))
           .videoCodec(FFmpegArgument.Codecs.Video.Copy)
-          .tracks(FFmpegArgument.Track.AllVideosMonoInput)
+          .tracks(FFmpegArgument.Track.AllVideosMonoInput())
           .tracks(FFmpegArgument.Track.customTrack(`[${name}]`))
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
-          .filterComplex(filter)
+          .filter(FFmpegArgument.Filter.Custom(filter))
           .disposition(
             FFmpegArgument.Stream.Disposition(
               FFmpegArgument.Stream.DispositionTarget(
@@ -159,7 +159,7 @@ app.whenReady().then(() => {
 
         await execute(builder.toString()).catch((e) => registerError(win, e));
 
-        audioTracks = getNumberOfAudioTracks(outFile);
+        audioTracks = fetchMetadata(outFile).audioBitrates;
 
         break;
       default:
@@ -171,7 +171,7 @@ app.whenReady().then(() => {
         break;
     }
 
-    const duration = getVideoDuration(outFile);
+    const duration = fileMetadata.duration;
     const stats = statSync(outFile);
 
     return {
@@ -180,6 +180,9 @@ app.whenReady().then(() => {
       duration,
       audioTracks,
       is10bit: pixelFmt10bit_check,
+      width: fileMetadata.width,
+      height: fileMetadata.height,
+      framerate: fileMetadata.framerate,
     };
   };
 
@@ -241,16 +244,18 @@ app.whenReady().then(() => {
   const reduceSize = async (
     file: string,
     bitrate: number,
-    audioTracks: number[],
+    audioTracksBitrate: number[],
     is10bit: boolean,
+    width: number,
+    height: number,
+    framerate: number,
     bitrateratio: number = 1,
     speed: number = 1,
   ) => {
     // Calculate audio bitrate
-    const audioBitratePerTrack = 128; // kbps
-    const mainAudioBitrate = 192; // kbps for the first track
-    const audioBitrate =
-      mainAudioBitrate + (audioTracks.length - 1) * audioBitratePerTrack;
+    const audioBitrates = audioTracksBitrate.map((bitrate, idx) =>
+      Math.min(Math.round(bitrate), idx === 0 ? 192 : 128),
+    );
 
     // Calculate video bitrate
     const scaledBitrate = Math.round(bitrate * bitrateratio);
@@ -258,25 +263,11 @@ app.whenReady().then(() => {
     // When speed < 1 : we still increase bitrate but by a reduced factor
     const bitrateWithSpeed =
       scaledBitrate * (speed >= 1 ? speed : 1 + 0.05 * (1 - speed));
-    const videoBitrate = bitrateWithSpeed - audioBitrate;
+    const videoBitrate =
+      bitrateWithSpeed - audioBitrates.reduce((acc, cur) => acc + cur, 0);
 
     const type = FFmpegArgument.Formats.MP4;
     let finalFile;
-
-    // TODO: #31
-    // You could use for example:
-    // builder
-    //   .videoFilter(
-    //     FFmpegArgument.VideoFilters.Scaler(
-    //       current_width / 1.5,
-    //       current_height / 1.5,
-    //     ),
-    //   )
-    //   .videoFilter(
-    //     FFmpegArgument.VideoFilters.Framerate(
-    //       current_framerate >= 60 ? 30 : current_framerate,
-    //     ),
-    //   );
 
     if (videoBitrate > 0) {
       finalFile = outputType(getNewFilename(file, "Compressed - "), type);
@@ -298,11 +289,11 @@ app.whenReady().then(() => {
         .streamingOptimization();
 
       // Compress audio and add metadata
-      audioTracks.forEach((_, i) => {
+      audioBitrates.forEach((bitrate, i) => {
         builder.bitrate(
           FFmpegArgument.Stream.Bitrate(
             FFmpegArgument.Stream.Type.Audio,
-            bitrateKB(i === 0 ? mainAudioBitrate : audioBitratePerTrack),
+            bitrateKB(bitrate),
             i,
           ),
         );
@@ -315,38 +306,42 @@ app.whenReady().then(() => {
           );
       });
 
-      if (speed === 1) {
-        builder
-          .tracks(FFmpegArgument.Track.AllVideosMonoInput) // all? or only at index 0?
-          .tracks(FFmpegArgument.Track.AllAudiosMonoInput, false);
-      }
-      // Speed up video
-      else {
-        const video = "v_newspeed";
-        const audios = audioTracks.map((_, i) => `a${i}_newspeed`);
+      const level = {
+        medium: 3000,
+        high: 2000,
 
-        const atempo = ((s) => {
-          const filters = [];
-          while (s > 2.0) {
-            filters.push("atempo=2.0");
-            s /= 2.0;
-          }
-          while (s < 0.5) {
-            filters.push("atempo=0.5");
-            s *= 2.0;
-          }
-          filters.push(`atempo=${s}`);
-          return filters.join(",");
-        })(speed);
+        /** Minimal condition that triggers a new compression level */
+        minimal(): number {
+          // Highest bitrate needed causing compression specific logic
+          return Math.max(
+            ...Object.values(this).filter((v) => typeof v === "number"),
+          );
+        },
+      };
 
-        builder
-          .filterComplex(
-            `[0:v]setpts=${1 / speed}*PTS[${video}];${audios.map((t, i) => `[0:a:${i}]${atempo}[${t}]`)}`,
+      const speed_cond = speed !== 1;
+      const bitrate_glbl_cond = bitrate < level.minimal();
+      const is10bit_glbl_cond = !args.hw && is10bit;
+
+      // TODO: We currently hardcode ONE video track,
+      //       we could support an arbitrary number of video tracks
+      const videoTrack =
+        speed_cond || bitrate_glbl_cond || is10bit_glbl_cond
+          ? FFmpegArgument.Track.customTrack("video_out")
+          : FFmpegArgument.Track.AllVideosMonoInput();
+      builder.tracks(videoTrack);
+
+      const audioTracks = speed_cond
+        ? audioTracksBitrate.map((_, i) =>
+            FFmpegArgument.Track.customTrack(`a${i}_newspeed`),
           )
-          .tracks(FFmpegArgument.Track.customTrack(`[${video}]`));
+        : [FFmpegArgument.Track.AllAudiosMonoInput];
+      audioTracks.forEach((track) => builder.tracks(track, false));
 
-        audios.forEach((audio) =>
-          builder.tracks(FFmpegArgument.Track.customTrack(`[${audio}]`)),
+      // Speed up file
+      if (speed_cond) {
+        builder.filter(
+          FFmpegArgument.Filter.Speed(speed, videoTrack, audioTracks),
         );
       }
 
@@ -354,13 +349,11 @@ app.whenReady().then(() => {
         // Hardware acceleration don't support 2-pass
         builder.hardwareAcceleration(args.hw);
       } else {
-        // No hw support
-        //  means we use CPU
-        //    means we can use 2-pass
-        if (is10bit) {
-          builder.videoFilter(FFmpegArgument.VideoFilters.PixelFormatYUV420);
+        // No hw support means we use CPU and 2-pass
+        if (is10bit_glbl_cond) {
+          builder.filter(FFmpegArgument.Filter.PixelFormatYUV420(videoTrack));
 
-          // AV1 have issue using 2-pass with 10 bit videos
+          // HOTFIX: AV1 have issue using 2-pass with 10 bit videos
           if (args.vCodec !== FFmpegArgument.Codecs.Video.AV1) {
             builder.twopass();
           }
@@ -369,13 +362,26 @@ app.whenReady().then(() => {
         }
       }
 
-      const twopass_logfiles = builder.leftoverFiles();
+      // Capping FPS
+      if (bitrate < level.medium) {
+        builder.filter(
+          FFmpegArgument.Filter.Framerate(Math.min(framerate, 30), videoTrack),
+        );
+      }
+
+      // Reduce dimensions
+      if (bitrate < level.high) {
+        builder.filter(
+          FFmpegArgument.Filter.Scaler(width / 1.5, height / 1.5, videoTrack),
+        );
+      }
 
       // Start compression
       await execute(builder.toString()).catch((e) => registerError(win, e));
 
       // Delete the 2 pass temporary files
-      twopass_logfiles
+      builder
+        .leftoverFiles()
         .map((f) => joinPaths(cwd(), f))
         .filter(doesFileExists)
         .map(deleteFile);
@@ -398,7 +404,7 @@ app.whenReady().then(() => {
       .output(FFmpegArgument.File(finalFile))
       .videoCodec(FFmpegArgument.Codecs.Video.Copy)
       .audioCodec(FFmpegArgument.Codecs.Audio.Copy)
-      .tracks(FFmpegArgument.Track.AllVideosMonoInput)
+      .tracks(FFmpegArgument.Track.AllVideosMonoInput())
       .tracks(FFmpegArgument.Track.AllAudiosMonoInput, false)
       .streamingOptimization();
 
@@ -435,9 +441,23 @@ app.whenReady().then(() => {
       bitrate: number,
       audioTracks: number[],
       is10bit: boolean,
+      width: number,
+      height: number,
+      framerate: number,
       bitrateratio: number,
       speed: number,
-    ) => reduceSize(file, bitrate, audioTracks, is10bit, bitrateratio, speed),
+    ) =>
+      reduceSize(
+        file,
+        bitrate,
+        audioTracks,
+        is10bit,
+        width,
+        height,
+        framerate,
+        bitrateratio,
+        speed,
+      ),
   );
   ipcMain.handle("moveMetadata", (_, file: string, nbTracks: number) =>
     moveMetadata(file, nbTracks),

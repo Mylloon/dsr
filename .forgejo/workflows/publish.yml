@@ -5,9 +5,6 @@ on:
   release:
     types: [published]
 
-env:
-  WINGET_OWNER: Mylloon
-
 jobs:
   winget:
     runs-on: docker
@@ -22,14 +19,14 @@ jobs:
           target: x86_64-unknown-linux-gnu
 
       - name: Update Packages
-        uses: Mylloon/winget-updater@cb1a2cf4a0cf697060d094098b6c1308b47a6b4c
+        uses: Mylloon/winget-updater@main # TODO: replace with michidk when PR accepted
         with:
-          komac-token: ${{ secrets.WINGET_TOKEN }}
-          identifier: "Mylloon.dsr"
-          repo: "Anri/dsr"
-          github_url: https://git.mylloon.fr/
-          url: "https://git.mylloon.fr/Anri/dsr/releases/download/{VERSION}/dsr-win32-x64-{VERSION}.zip"
-          custom-fork-owner: ${{ env.WINGET_OWNER }}
+          komac-token: ${{ secrets.WINGET_TOKEN }} # this has to be a `workflow` classic gh token
+          komac-version: 2.15.0 # TODO: update komac default version upstream
+          identifier: Mylloon.dsr
+          repo: ${{ forgejo.repository }}
+          url: "https://${{ forgejo.server_url }}/${{ forgejo.repository }}/releases/download/{VERSION}/dsr-win32-x64-{VERSION}.zip"
+          custom-fork-owner: Mylloon
 
   aur:
     runs-on: docker
@@ -38,7 +35,7 @@ jobs:
 
     steps:
       - name: Update AUR package
-        uses: varabyte/update-aur-package@572e31b1972fa289a27b1926c06a489eb89c7fd7
+        uses: varabyte/update-aur-package@master
         with:
           version: ${{ forgejo.ref_name }}
           package_name: dsr

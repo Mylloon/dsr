@@ -35,7 +35,7 @@ describe("FFmpeg builder", () => {
             }),
           )
           .audioCodec(FFmpegArgument.Codecs.Audio.AAC)
-          .tracks(FFmpegArgument.Track.AllVideosMonoInput)
+          .tracks(FFmpegArgument.Track.AllVideosMonoInput())
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
           .toString(),
         `"${binary}" -i "${input}" -c:v libx264 -b:v ${videoBitrate}k -c:a aac -map 0:v -map 0:a -f mp4 "${output}"`,
@@ -58,7 +58,7 @@ describe("FFmpeg builder", () => {
             }),
           )
           .audioCodec(FFmpegArgument.Codecs.Audio.AAC)
-          .tracks(FFmpegArgument.Track.AllVideosMonoInput)
+          .tracks(FFmpegArgument.Track.AllVideosMonoInput())
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
           .twopass(FFmpegArgument.SystemNULL.Windows)
           .toString(),
@@ -82,7 +82,7 @@ describe("FFmpeg builder", () => {
             }),
           )
           .audioCodec(FFmpegArgument.Codecs.Audio.AAC)
-          .tracks(FFmpegArgument.Track.AllVideosMonoInput)
+          .tracks(FFmpegArgument.Track.AllVideosMonoInput())
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
           .twopass(FFmpegArgument.SystemNULL.Windows)
           .toString(),
@@ -106,7 +106,7 @@ describe("FFmpeg builder", () => {
             }),
           )
           .audioCodec(FFmpegArgument.Codecs.Audio.AAC)
-          .tracks(FFmpegArgument.Track.AllVideosMonoInput)
+          .tracks(FFmpegArgument.Track.AllVideosMonoInput())
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
           .twopass(FFmpegArgument.SystemNULL.Windows)
           .toString(),
@@ -130,7 +130,7 @@ describe("FFmpeg builder", () => {
             }),
           )
           .audioCodec(FFmpegArgument.Codecs.Audio.AAC)
-          .tracks(FFmpegArgument.Track.AllVideosMonoInput)
+          .tracks(FFmpegArgument.Track.AllVideosMonoInput())
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
           .hardwareAcceleration(FFmpegArgument.HardwareBackend.DirectX11)
           .toString(),
@@ -154,7 +154,7 @@ describe("FFmpeg builder", () => {
             }),
           )
           .audioCodec(FFmpegArgument.Codecs.Audio.AAC)
-          .tracks(FFmpegArgument.Track.AllVideosMonoInput)
+          .tracks(FFmpegArgument.Track.AllVideosMonoInput())
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
           .hardwareAcceleration(FFmpegArgument.HardwareBackend.VAAPI)
           .toString(),
@@ -172,8 +172,8 @@ describe("FFmpeg builder", () => {
           .output(FFmpegArgument.File(output))
           .videoCodec(FFmpegArgument.Codecs.Video.Copy)
           .tracks(FFmpegArgument.Track.customTrack(`[${name}]`))
-          .tracks(FFmpegArgument.Track.AllVideosMonoInput)
-          .filterComplex(filter)
+          .tracks(FFmpegArgument.Track.AllVideosMonoInput())
+          .filter(FFmpegArgument.Filter.Custom(filter))
           .toString(),
         `"${binary}" -i "${input}" -c:v copy -filter_complex "${filter}" -map [${name}] -map 0:v "${output}"`,
       );
@@ -231,10 +231,10 @@ describe("FFmpeg builder", () => {
           .input(FFmpegArgument.File(input))
           .output(FFmpegArgument.File(output))
           .videoCodec(FFmpegArgument.Codecs.Video.Copy)
-          .tracks(FFmpegArgument.Track.AllVideosMonoInput)
+          .tracks(FFmpegArgument.Track.AllVideosMonoInput())
           .tracks(FFmpegArgument.Track.customTrack(`[${name}]`))
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
-          .filterComplex(filter)
+          .filter(FFmpegArgument.Filter.Custom(filter))
           .disposition(
             FFmpegArgument.Stream.Disposition(
               FFmpegArgument.Stream.DispositionTarget(
@@ -266,7 +266,7 @@ describe("FFmpeg builder", () => {
           .output(FFmpegArgument.File(output))
           .videoCodec(FFmpegArgument.Codecs.Video.Copy)
           .audioCodec(FFmpegArgument.Codecs.Audio.Copy)
-          .tracks(FFmpegArgument.Track.AllVideosMonoInput)
+          .tracks(FFmpegArgument.Track.AllVideosMonoInput())
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
           .customMetadata(
             FFmpegArgument.Track.Metadata(
@@ -299,7 +299,7 @@ describe("FFmpeg builder", () => {
           .output(FFmpegArgument.File(output))
           .videoCodec(FFmpegArgument.Codecs.Video.Copy)
           .audioCodec(FFmpegArgument.Codecs.Audio.Copy)
-          .tracks(FFmpegArgument.Track.AllVideosMonoInput)
+          .tracks(FFmpegArgument.Track.AllVideosMonoInput())
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
           .streamingOptimization()
           .toString(),
@@ -315,7 +315,7 @@ describe("FFmpeg builder", () => {
           .input(FFmpegArgument.File(input))
           .output(FFmpegArgument.File(output))
           .videoCodec({ default: test_codec })
-          .tracks(FFmpegArgument.Track.AllVideosMonoInput)
+          .tracks(FFmpegArgument.Track.AllVideosMonoInput())
           .hardwareAcceleration(FFmpegArgument.HardwareBackend.VAAPI)
           .toString(),
         `"${binary}" -i "${input}" -c:v ${test_codec} -map 0:v "${output}"`,
@@ -337,7 +337,45 @@ describe("FFmpeg builder", () => {
           .videoCodec(FFmpegArgument.Codecs.Video.H264)
           .hardwareAcceleration(FFmpegArgument.HardwareBackend.VAAPI, true)
           .toString(),
-        `"${binary}" -hwaccel vaapi -hwaccel_output_format vaapi -vaapi_device /dev/dri/renderD128 -f lavfi -i "${input_test}" -c:v h264_vaapi -vf format=nv12,hwupload -f null -t 0.1 "${output_test}"`,
+        `"${binary}" -hwaccel vaapi -hwaccel_output_format vaapi -vaapi_device /dev/dri/renderD128 -f lavfi -i "${input_test}" -c:v h264_vaapi -filter_complex "format=nv12,hwupload" -f null -t 0.1 "${output_test}"`,
+      );
+    });
+  }
+  {
+    it("Speed by 2x a clip", () => {
+      const video = FFmpegArgument.Track.customTrack("new_v");
+      const audio1 = FFmpegArgument.Track.customTrack("new_a0");
+      const audio2 = FFmpegArgument.Track.customTrack("new_a1");
+      assert.strictEqual(
+        new FFmpegBuilder(binary)
+          .input(FFmpegArgument.File(input))
+          .output(FFmpegArgument.File(output))
+          .videoCodec(FFmpegArgument.Codecs.Video.H264)
+          .tracks(video)
+          .tracks(audio1)
+          .tracks(audio2)
+          .filter(FFmpegArgument.Filter.Speed(2, video, [audio1, audio2]))
+          .toString(),
+        `"${binary}" -i "${input}" -c:v libx264 -filter_complex "[0:v]setpts=0.5*PTS${video},[0:a:0]atempo=2${audio1},[0:a:1]atempo=2${audio2}" -map ${video} -map ${audio1} -map ${audio2} "${output}"`,
+      );
+    });
+  }
+  {
+    it("Slow by 2x a clip", () => {
+      const video = FFmpegArgument.Track.customTrack("new_v");
+      const audio1 = FFmpegArgument.Track.customTrack("new_a0");
+      const audio2 = FFmpegArgument.Track.customTrack("new_a1");
+      assert.strictEqual(
+        new FFmpegBuilder(binary)
+          .input(FFmpegArgument.File(input))
+          .output(FFmpegArgument.File(output))
+          .videoCodec(FFmpegArgument.Codecs.Video.H264)
+          .tracks(video)
+          .tracks(audio1)
+          .tracks(audio2)
+          .filter(FFmpegArgument.Filter.Speed(0.5, video, [audio1, audio2]))
+          .toString(),
+        `"${binary}" -i "${input}" -c:v libx264 -filter_complex "[0:v]setpts=2*PTS${video},[0:a:0]atempo=0.5${audio1},[0:a:1]atempo=0.5${audio2}" -map ${video} -map ${audio1} -map ${audio2} "${output}"`,
       );
     });
   }

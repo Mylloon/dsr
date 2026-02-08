@@ -61,25 +61,6 @@ export namespace FFmpegArgument {
     QSV = "qsv",
   }
 
-  /** Available filters */
-  export const VideoFilters = {
-    /** YUV 4:2:0 = Useful when downgrading from 10 to 8 bits or for dumb players.
-     *  See: https://trac.ffmpeg.org/wiki/Encode/H.264#Encodingfordumbplayers */
-    PixelFormatYUV420: { default: "format=yuv420p" },
-    /** Change the video dimensions */
-    Scaler: (w: number, h: number) => ({
-      [HardwareBackend.VAAPI]: `scale_vaapi=${w}:${h}`,
-      default: `scale=${w}:${h}`,
-    }),
-    /** Change the video framerate */
-    Framerate: (fps: number) => ({
-      default: `fps=${fps}`,
-    }),
-  } as const;
-  export type VideoFilters = { default: string } & Partial<
-    Record<HardwareBackend, string>
-  >;
-
   export namespace Codecs {
     export const Video = {
       Copy: {
@@ -257,25 +238,31 @@ export namespace FFmpegArgument {
     trackIndex: number = null,
     streamIndex: number = null,
     customName: string = null,
+    isLabel: boolean = false,
   ): Track.Track => ({
     streamIndex,
     type,
     trackIndex,
     customName,
     toString: () =>
-      customName ??
-      [streamIndex, type?.prefix ?? null, trackIndex]
-        .filter((el) => el !== null)
-        .map((el) => `${el}`)
-        .join(":"),
+      customName === null
+        ? (isLabel ? "[" : "") +
+          [streamIndex, type?.prefix ?? null, trackIndex]
+            .filter((el) => el !== null)
+            .map((el) => `${el}`)
+            .join(":") +
+          (isLabel ? "]" : "")
+        : `[${customName}]`,
   });
   export function Track(
     type: Stream.Type = null,
     trackIndex: number = null,
     streamIndex: number = null,
+    filteredTrack: boolean = false,
   ): Track.Track {
-    return newTrack(type, trackIndex, streamIndex);
+    return newTrack(type, trackIndex, streamIndex, null, filteredTrack);
   }
+  export type Track = (typeof Track)[keyof typeof Track];
   export namespace Track {
     export interface Track extends Stream {
       /** Index of the track, starting from 0 */
@@ -287,13 +274,17 @@ export namespace FFmpegArgument {
     }
 
     export const customTrack = (name: string = null): Track =>
-      newTrack(undefined, undefined, undefined, name);
+      newTrack(
+        undefined,
+        undefined,
+        undefined,
+        name.startsWith("[") && name.endsWith("]")
+          ? name.slice(1, name.length - 1)
+          : name,
+      );
 
-    export const AllVideosMonoInput = FFmpegArgument.Track(
-      Stream.Type.Video,
-      undefined,
-      0,
-    );
+    export const AllVideosMonoInput = (for_filter = false) =>
+      FFmpegArgument.Track(Stream.Type.Video, undefined, 0, for_filter);
 
     export const AllAudiosMonoInput = FFmpegArgument.Track(
       Stream.Type.Audio,
@@ -339,6 +330,96 @@ export namespace FFmpegArgument {
       };
     };
   }
+
+  /** Available filters */
+  export const Filter = {
+    /** YUV 4:2:0 = Useful when downgrading from 10 to 8 bits or for dumb players.
+     *  See: https://trac.ffmpeg.org/wiki/Encode/H.264#Encodingfordumbplayers */
+    PixelFormatYUV420: (
+      outTrack: Track,
+      inTrack = FFmpegArgument.Track.AllVideosMonoInput(true),
+    ) =>
+      ({
+        in: inTrack,
+        out: outTrack,
+        expr: { default: "format=yuv420p" },
+      }) as Filter,
+    /** Change the video dimensions */
+    Scaler: (
+      w: number,
+      h: number,
+      outTrack: Track,
+      inTrack = FFmpegArgument.Track.AllVideosMonoInput(true),
+    ): Filter => ({
+      in: inTrack,
+      out: outTrack,
+      expr: {
+        [HardwareBackend.VAAPI]: `scale_vaapi=${w}:${h}`,
+        default: `scale=${w}:${h}`,
+      },
+    }),
+    /** Change the video framerate */
+    Framerate: (
+      fps: number,
+      outTrack: Track,
+      inTrack = FFmpegArgument.Track.AllVideosMonoInput(true),
+    ): Filter => ({
+      in: inTrack,
+      out: outTrack,
+      expr: {
+        default: `fps=${fps}`,
+      },
+    }),
+    /** Change file speed */
+    Speed: (
+      multiplier: number,
+      outVideoTrack: Track,
+      /** Ordered list */
+      outAudioTracks: Track[],
+      inVideoTrack = FFmpegArgument.Track.AllVideosMonoInput(true),
+    ): Filter[] => [
+      {
+        in: inVideoTrack,
+        out: outVideoTrack,
+        expr: {
+          default: `setpts=${1 / multiplier}*PTS`,
+        },
+      },
+      ...outAudioTracks.map((out, i) => ({
+        in: Track(Stream.Type.Audio, i, 0, true),
+        out,
+        expr: {
+          default: ((speed) => {
+            const filters: string[] = [];
+            let s = speed;
+
+            while (s > 2.0) {
+              filters.push("atempo=2.0");
+              s /= 2.0;
+            }
+            while (s < 0.5) {
+              filters.push("atempo=0.5");
+              s *= 2.0;
+            }
+
+            filters.push(`atempo=${s}`);
+            return filters.join(",");
+          })(multiplier),
+        },
+      })),
+    ],
+    /** Custom filter, **can create incompatibilities** */
+    Custom: (data: string): Filter => ({
+      in: null,
+      out: null,
+      expr: { default: data },
+    }),
+  } as const;
+  export type Filter = {
+    in: FFmpegArgument.Track | null;
+    out: FFmpegArgument.Track | null;
+    expr: { default: string } & Partial<Record<HardwareBackend, string>>;
+  };
 }
 
 /** FFmpeg command builder. **Very few checks are made.** */
@@ -366,14 +447,14 @@ export class FFmpegBuilder<
   // Video Settings
   private _videoCodec: FFmpegArgument.Codecs.Video = null;
   private _bitrates: FFmpegArgument.Stream.StreamData[] = [];
-  private _videoFilters: FFmpegArgument.VideoFilters[] = [];
+  private _filterComplex: FFmpegArgument.Filter[] = [];
 
   // Audio/Structure Settings
   private _audioCodec: FFmpegArgument.Codecs.Audio = null;
   private _trackMappings: string[] = [];
   private _metadata: FFmpegArgument.Track.MetadataPrintable[] = [];
   private _movFlags: string[] = [];
-  private _filterComplex: string[] = [];
+
   private _dispositions: FFmpegArgument.Stream.DispositionInfo[] = [];
 
   private clone<I extends boolean, O extends boolean>(): FFmpegBuilder<I, O> {
@@ -386,7 +467,6 @@ export class FFmpegBuilder<
     // Deep copy arrays
     copy._input = [...this._input];
     copy._bitrates = [...this._bitrates];
-    copy._videoFilters = [...this._videoFilters];
     copy._trackMappings = [...this._trackMappings];
     copy._metadata = [...this._metadata];
     copy._movFlags = [...this._movFlags];
@@ -430,9 +510,9 @@ export class FFmpegBuilder<
 
     if (debug) {
       // In order to work, we need specific video filters
-      this._videoFilters.push(
-        { default: "format=nv12" },
-        { default: "hwupload" },
+      this._filterComplex.push(
+        FFmpegArgument.Filter.Custom("format=nv12"),
+        FFmpegArgument.Filter.Custom("hwupload"),
       );
     }
 
@@ -470,12 +550,6 @@ export class FFmpegBuilder<
     return this;
   }
 
-  /** Custom video filter that will be applied to the video */
-  videoFilter(filter: FFmpegArgument.VideoFilters) {
-    this._videoFilters.push(filter);
-    return this;
-  }
-
   /** Specify the tracks to add to the ouput video */
   tracks(mapping: FFmpegArgument.Track.Track, optionalOnly = true) {
     this._trackMappings.push(mapping.toString() + (optionalOnly ? "" : "?"));
@@ -495,8 +569,8 @@ export class FFmpegBuilder<
   }
 
   /** Adds filtergraph that define feature applied to streams */
-  filterComplex(filter: string) {
-    this._filterComplex.push(filter);
+  filter(filter: FFmpegArgument.Filter | FFmpegArgument.Filter[]) {
+    this._filterComplex.push(...(Array.isArray(filter) ? filter : [filter]));
     return this;
   }
 
@@ -657,11 +731,37 @@ export class FFmpegBuilder<
         args.push(s.toString(), s.bitrate.toString());
       });
 
-    if (FFmpegBuilder.changed(this._videoFilters)) {
-      args.push(
-        "-vf",
-        this._videoFilters.map((vf) => vf[this._hw] ?? vf.default).join(","),
-      );
+    if (FFmpegBuilder.changed(this._filterComplex)) {
+      // On first pass, we omit everything that is not explicitly video related, and outputs
+      const filterComplex = Object.values(
+        // Merge filters that work on same IN/OUT
+        this._filterComplex.reduce<Record<string, FFmpegArgument.Filter[]>>(
+          (hmap, f) => {
+            if (
+              pass === 1 &&
+              (f.in === null ||
+                (f.in as FFmpegArgument.Stream).type ===
+                  FFmpegArgument.Stream.Type.Audio)
+            ) {
+              return hmap;
+            }
+            (hmap[`${f.in ?? ""}|${f.out ?? ""}`] ??= []).push(f);
+            return hmap;
+          },
+          {},
+        ),
+      )
+        .map(
+          (fs) =>
+            // They share same IN/OUT
+            `${fs[0].in ?? ""}${fs
+              .map((f) => f.expr[this._hw] ?? f.expr.default)
+              .join(",")}${(pass === 1 ? null : fs[0].out) ?? ""}`,
+        )
+        .join(",");
+      if (filterComplex.length > 0) {
+        args.push("-filter_complex", `"${filterComplex}"`);
+      }
     }
 
     // Pass-specific logic
@@ -699,12 +799,6 @@ export class FFmpegBuilder<
           }
         }
       }
-    }
-
-    if (FFmpegBuilder.changed(this._filterComplex)) {
-      args.push(
-        ...this._filterComplex.flatMap((f) => ["-filter_complex", `"${f}"`]),
-      );
     }
 
     // Audio

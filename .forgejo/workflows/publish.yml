@@ -25,7 +25,7 @@ jobs:
           komac-version: 2.15.0 # TODO: update komac default version upstream
           identifier: Mylloon.dsr
           repo: ${{ forgejo.repository }}
-          url: "https://${{ forgejo.server_url }}/${{ forgejo.repository }}/releases/download/{VERSION}/dsr-win32-x64-{VERSION}.zip"
+          url: "${{ forgejo.server_url }}/${{ forgejo.repository }}/releases/download/{VERSION}/dsr-win32-x64-{VERSION}.zip"
           custom-fork-owner: Mylloon
 
   aur:

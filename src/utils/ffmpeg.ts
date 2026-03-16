@@ -342,7 +342,7 @@ export namespace FFmpegArgument {
       ({
         in: inTrack,
         out: outTrack,
-        expr: { default: "format=yuv420p" },
+        expr: { default: () => "format=yuv420p" },
       }) as Filter,
     /** Change the video dimensions */
     Scaler: (
@@ -354,8 +354,17 @@ export namespace FFmpegArgument {
       in: inTrack,
       out: outTrack,
       expr: {
-        [HardwareBackend.VAAPI]: `scale_vaapi=${w}:${h}`,
-        default: `scale=${w}:${h}`,
+        [HardwareBackend.VAAPI]: () => `scale_vaapi=${w}:${h}`,
+        default: (ctx: FilterContext) => {
+          const cap = {
+            [FFmpegArgument.Codecs.Video.H264[HardwareBackend.Cuda]]: {
+              w: 4096,
+              h: 4096,
+            },
+          }[ctx.hw];
+          const scale = cap ? Math.min(cap.w / w, cap.h / h, 1) : 1;
+          return `scale=${Math.floor(w * scale)}:${Math.floor(h * scale)}`;
+        },
       },
     }),
     /** Change the video framerate */
@@ -367,7 +376,7 @@ export namespace FFmpegArgument {
       in: inTrack,
       out: outTrack,
       expr: {
-        default: `fps=${fps}`,
+        default: () => `fps=${fps}`,
       },
     }),
     /** Change file speed */
@@ -382,29 +391,30 @@ export namespace FFmpegArgument {
         in: inVideoTrack,
         out: outVideoTrack,
         expr: {
-          default: `setpts=${1 / multiplier}*PTS`,
+          default: () => `setpts=${1 / multiplier}*PTS`,
         },
       },
       ...outAudioTracks.map((out, i) => ({
         in: Track(Stream.Type.Audio, i, 0, true),
         out,
         expr: {
-          default: ((speed) => {
-            const filters: string[] = [];
-            let s = speed;
+          default: () =>
+            ((speed) => {
+              const filters: string[] = [];
+              let s = speed;
 
-            while (s > 2.0) {
-              filters.push("atempo=2.0");
-              s /= 2.0;
-            }
-            while (s < 0.5) {
-              filters.push("atempo=0.5");
-              s *= 2.0;
-            }
+              while (s > 2.0) {
+                filters.push("atempo=2.0");
+                s /= 2.0;
+              }
+              while (s < 0.5) {
+                filters.push("atempo=0.5");
+                s *= 2.0;
+              }
 
-            filters.push(`atempo=${s}`);
-            return filters.join(",");
-          })(multiplier),
+              filters.push(`atempo=${s}`);
+              return filters.join(",");
+            })(multiplier),
         },
       })),
     ],
@@ -412,14 +422,20 @@ export namespace FFmpegArgument {
     Custom: (data: string): Filter => ({
       in: null,
       out: null,
-      expr: { default: data },
+      expr: { default: () => data },
     }),
   } as const;
   export type Filter = {
     in: FFmpegArgument.Track | null;
     out: FFmpegArgument.Track | null;
-    expr: { default: string } & Partial<Record<HardwareBackend, string>>;
+    expr: { default: (ctx: FilterContext) => string } & Partial<
+      Record<HardwareBackend, (ctx: FilterContext) => string>
+    >;
   };
+
+  export interface FilterContext {
+    hw: string;
+  }
 }
 
 /** FFmpeg command builder. **Very few checks are made.** */
@@ -599,7 +615,11 @@ export class FFmpegBuilder<
     }
 
     // Add hw support only if the selected codec supports it
-    if (FFmpegBuilder.changed(this._hw) && this._videoCodec[this._hw]) {
+    if (
+      FFmpegBuilder.changed(this._hw) &&
+      FFmpegBuilder.changed(this._videoCodec) &&
+      this._videoCodec[this._hw]
+    ) {
       const hw = ["-hwaccel", this._hw];
       if (!this.onWindows) {
         // Specific outpout format on Linux
@@ -756,6 +776,9 @@ export class FFmpegBuilder<
             // They share same IN/OUT
             `${fs[0].in ?? ""}${fs
               .map((f) => f.expr[this._hw] ?? f.expr.default)
+              .map((f_builder) =>
+                f_builder({ hw: this._videoCodec[this._hw] ?? null }),
+              )
               .join(",")}${(pass === 1 ? null : fs[0].out) ?? ""}`,
         )
         .join(",");

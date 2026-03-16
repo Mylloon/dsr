@@ -379,4 +379,32 @@ describe("FFmpeg builder", () => {
       );
     });
   }
+  {
+    it("Hardware acceleration without no video codec", () => {
+      assert.strictEqual(
+        new FFmpegBuilder(binary)
+          .input(FFmpegArgument.File(input))
+          .output(FFmpegArgument.File(output))
+          .hardwareAcceleration(FFmpegArgument.HardwareBackend.VAAPI)
+          .toString(),
+        `"${binary}" -i "${input}" "${output}"`,
+      );
+    });
+  }
+  {
+    it("Hardware acceleration with ~8K H264 NVenc (which is limited to ~4K)", () => {
+      const video = FFmpegArgument.Track.AllVideosMonoInput(true);
+      assert.strictEqual(
+        new FFmpegBuilder(binary)
+          .input(FFmpegArgument.File(input))
+          .output(FFmpegArgument.File(output))
+          .videoCodec(FFmpegArgument.Codecs.Video.H264)
+          .tracks(video)
+          .filter(FFmpegArgument.Filter.Scaler(5120, 2880, video))
+          .hardwareAcceleration(FFmpegArgument.HardwareBackend.Cuda)
+          .toString(),
+        `"${binary}" -hwaccel cuda -hwaccel_output_format cuda -i "${input}" -c:v h264_nvenc -rc vbr -multipass fullres -filter_complex "[0:v]scale=4096:2304[0:v]" -map [0:v] "${output}"`,
+      );
+    });
+  }
 });

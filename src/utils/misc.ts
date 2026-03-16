@@ -7,8 +7,10 @@ import { promisify } from "util";
 
 import { FFmpegArgument, FFmpegBuilder } from "./ffmpeg";
 
-import ffprobe = require("ffprobe-static");
-const ffprobePath = ffprobe.path.replace("app.asar", "app.asar.unpacked");
+const ffprobePath = `${require("@derhuerst/ffprobe-static")}`.replace(
+  "app.asar",
+  "app.asar.unpacked",
+);
 
 export const processes: ChildProcess[] = [];
 

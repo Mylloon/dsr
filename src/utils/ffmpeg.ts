@@ -132,7 +132,7 @@ export namespace FFmpegArgument {
     /** Index of the stream, starting from 0 */
     streamIndex: number | null;
     /** Type of the stream */
-    type: Stream.Type;
+    streamType: Stream.Type;
   }
   export namespace Stream {
     /** Internal possible types for a stream */
@@ -177,7 +177,7 @@ export namespace FFmpegArgument {
       bitrate: Bitrate,
       streamIndex: number = null,
     ): StreamData => ({
-      type,
+      streamType: type,
       streamIndex,
       bitrate: {
         ...bitrate,
@@ -193,7 +193,7 @@ export namespace FFmpegArgument {
       },
       toString() {
         return (
-          `-b:${this.type.prefix}` +
+          `-b:${this.streamType.prefix}` +
           (this.streamIndex !== null ? `:${this.streamIndex}` : "")
         );
       },
@@ -257,7 +257,7 @@ export namespace FFmpegArgument {
     isLabel: boolean = false,
   ): Track.Track => ({
     streamIndex,
-    type,
+    streamType: type,
     trackIndex,
     customName,
     toString: () =>
@@ -340,7 +340,7 @@ export namespace FFmpegArgument {
         key,
         value: title,
         toStringArray: () => [
-          `-metadata:s:${track.type.prefix}:${track.trackIndex}`,
+          `-metadata:s:${track.streamType.prefix}:${track.trackIndex}`,
           `${key}="${title}"`,
         ],
       };
@@ -713,7 +713,7 @@ export class FFmpegBuilder<
         /** Extra data about bitrate for VBR */
         const vbr_args = (() => {
           const bitrate = this._bitrates.find(
-            (s) => s.type === FFmpegArgument.Stream.Type.Video,
+            (s) => s.streamType.type === FFmpegArgument.Stream.Type.Video.type,
           )?.bitrate;
           return bitrate
             ? [
@@ -771,7 +771,9 @@ export class FFmpegBuilder<
     }
 
     this._bitrates
-      .filter((s) => s.type === FFmpegArgument.Stream.Type.Video)
+      .filter(
+        (s) => s.streamType.type === FFmpegArgument.Stream.Type.Video.type,
+      )
       .forEach((s) => {
         args.push(s.toString(), s.bitrate.toString());
       });
@@ -785,8 +787,8 @@ export class FFmpegBuilder<
             if (
               pass === 1 &&
               (f.in === null ||
-                (f.in as FFmpegArgument.Stream).type ===
-                  FFmpegArgument.Stream.Type.Audio)
+                (f.in as FFmpegArgument.Stream).streamType.type ===
+                  FFmpegArgument.Stream.Type.Audio.type)
             ) {
               return hmap;
             }
@@ -858,7 +860,7 @@ export class FFmpegBuilder<
     }
 
     this._bitrates
-      .filter((s) => s.type === FFmpegArgument.Stream.Type.Audio)
+      .filter((s) => s.streamType === FFmpegArgument.Stream.Type.Audio)
       .forEach((s) => {
         args.push(s.toString(), s.bitrate.toString());
       });

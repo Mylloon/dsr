@@ -95,7 +95,13 @@ export namespace FFmpegArgument {
       H265: {
         [HardwareBackend.Cuda]: { name: "hevc_nvenc" },
         [HardwareBackend.DirectX11]: { name: "hevc_amf" },
-        [HardwareBackend.VAAPI]: { name: "hevc_vaapi" },
+        [HardwareBackend.VAAPI]: {
+          name: "hevc_vaapi",
+          constraints: {
+            width: { min: 64, max: 4096 },
+            height: { min: 64, max: 4096 },
+          },
+        },
         [HardwareBackend.Vulkan]: { name: "hevc_vulkan" },
         [HardwareBackend.QSV]: { name: "hevc_qsv" },
         default: { name: "libx265" },

@@ -353,6 +353,26 @@ export namespace FFmpegArgument {
     };
   }
 
+  const clampScale = (
+    w: number,
+    h: number,
+    constraints: {
+      width?: { min?: number; max?: number };
+      height?: { min?: number; max?: number };
+    },
+  ) => {
+    const maxScale = Math.min(
+      constraints.width?.max ? constraints.width.max / w : 1,
+      constraints.height?.max ? constraints.height.max / h : 1,
+      1,
+    );
+    const minScale = Math.max(
+      constraints.width?.min ? constraints.width.min / w : 0,
+      constraints.height?.min ? constraints.height.min / h : 0,
+    );
+    return Math.max(maxScale, minScale);
+  };
+
   /** Available filters */
   export const Filter = {
     /** YUV 4:2:0 = Useful when downgrading from 10 to 8 bits or for dumb players.
@@ -376,25 +396,22 @@ export namespace FFmpegArgument {
       in: inTrack,
       out: outTrack,
       expr: {
-        [HardwareBackend.VAAPI]: () => `scale_vaapi=${w}:${h}`,
-        [HardwareBackend.Vulkan]: () => `scale_vulkan=${w}:${h}`,
-        default: (ctx: FilterContext) => {
-          const constraints = ctx.vCodec?.constraints;
-          const scale = constraints
-            ? Math.min(
-                Math.min(
-                  constraints.width?.max ? constraints.width.max / w : 1,
-                  constraints.height?.max ? constraints.height.max / h : 1,
-                  1,
-                ),
-                Math.max(
-                  constraints.width?.min ? constraints.width.min / w : 1,
-                  constraints.height?.min ? constraints.height.min / h : 1,
-                  1,
-                ),
-              )
+        [HardwareBackend.VAAPI]: (ctx: FilterContext) => {
+          const scale = ctx.vCodec?.constraints
+            ? clampScale(w, h, ctx.vCodec.constraints)
             : 1;
-
+          return `scale_vaapi=${Math.floor(w * scale)}:${Math.floor(h * scale)}`;
+        },
+        [HardwareBackend.Vulkan]: (ctx: FilterContext) => {
+          const scale = ctx.vCodec?.constraints
+            ? clampScale(w, h, ctx.vCodec.constraints)
+            : 1;
+          return `scale_vulkan=${Math.floor(w * scale)}:${Math.floor(h * scale)}`;
+        },
+        default: (ctx: FilterContext) => {
+          const scale = ctx.vCodec?.constraints
+            ? clampScale(w, h, ctx.vCodec.constraints)
+            : 1;
           return `scale=${Math.floor(w * scale)}:${Math.floor(h * scale)}`;
         },
       },
@@ -662,9 +679,11 @@ export class FFmpegBuilder<
         switch (this._hw) {
           case FFmpegArgument.HardwareBackend.VAAPI: {
             hw.push("-vaapi_device", "/dev/dri/renderD128");
+            break;
           }
           case FFmpegArgument.HardwareBackend.Vulkan: {
             hw.push("-init_hw_device", "vulkan=vk");
+            break;
           }
         }
       }
@@ -715,6 +734,7 @@ export class FFmpegBuilder<
             // See: https://trac.ffmpeg.org/wiki/Encode/VP9#rowmt
             args.push("-row-mt", "1");
             args.push("-tune-content", "screen");
+            break;
           }
         }
       } else {

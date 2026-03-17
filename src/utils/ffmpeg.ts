@@ -377,6 +377,7 @@ export namespace FFmpegArgument {
       out: outTrack,
       expr: {
         [HardwareBackend.VAAPI]: () => `scale_vaapi=${w}:${h}`,
+        [HardwareBackend.Vulkan]: () => `scale_vulkan=${w}:${h}`,
         default: (ctx: FilterContext) => {
           const constraints = ctx.vCodec?.constraints;
           const scale = constraints

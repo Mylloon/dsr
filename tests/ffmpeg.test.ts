@@ -29,7 +29,7 @@ describe("FFmpeg builder", () => {
           .output(FFmpegArgument.File(output, FFmpegArgument.Formats.MP4))
           .videoCodec(FFmpegArgument.Codecs.Video.H264)
           .bitrate(
-            FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
+            FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video(), {
               value: videoBitrate,
               unit: FFmpegArgument.Stream.Unit.Kb,
             }),
@@ -52,7 +52,7 @@ describe("FFmpeg builder", () => {
           .output(FFmpegArgument.File(output, FFmpegArgument.Formats.MP4))
           .videoCodec(FFmpegArgument.Codecs.Video.H264)
           .bitrate(
-            FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
+            FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video(), {
               value: videoBitrate,
               unit: FFmpegArgument.Stream.Unit.Kb,
             }),
@@ -76,7 +76,7 @@ describe("FFmpeg builder", () => {
           .output(FFmpegArgument.File(output, FFmpegArgument.Formats.MP4))
           .videoCodec(FFmpegArgument.Codecs.Video.H265)
           .bitrate(
-            FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
+            FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video(), {
               value: videoBitrate,
               unit: FFmpegArgument.Stream.Unit.Kb,
             }),
@@ -100,7 +100,7 @@ describe("FFmpeg builder", () => {
           .output(FFmpegArgument.File(output, FFmpegArgument.Formats.MP4))
           .videoCodec(FFmpegArgument.Codecs.Video.AV1)
           .bitrate(
-            FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
+            FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video(), {
               value: videoBitrate,
               unit: FFmpegArgument.Stream.Unit.Kb,
             }),
@@ -124,7 +124,7 @@ describe("FFmpeg builder", () => {
           .output(FFmpegArgument.File(output, FFmpegArgument.Formats.MP4))
           .videoCodec(FFmpegArgument.Codecs.Video.H264)
           .bitrate(
-            FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
+            FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video(), {
               value: videoBitrate,
               unit: FFmpegArgument.Stream.Unit.Kb,
             }),
@@ -148,7 +148,7 @@ describe("FFmpeg builder", () => {
           .output(FFmpegArgument.File(output, FFmpegArgument.Formats.MP4))
           .videoCodec(FFmpegArgument.Codecs.Video.H264)
           .bitrate(
-            FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, {
+            FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video(), {
               value: videoBitrate,
               unit: FFmpegArgument.Stream.Unit.Kb,
             }),
@@ -194,7 +194,7 @@ describe("FFmpeg builder", () => {
           .tracks(
             // Copy all audio from second input
             FFmpegArgument.Track(
-              FFmpegArgument.Stream.Type.Audio,
+              FFmpegArgument.Stream.Type.Audio(),
               undefined,
               1,
             ),
@@ -203,7 +203,7 @@ describe("FFmpeg builder", () => {
           .disposition(
             FFmpegArgument.Stream.Disposition(
               FFmpegArgument.Stream.DispositionTarget(
-                FFmpegArgument.Stream.Type.Audio,
+                FFmpegArgument.Stream.Type.Audio(),
               ),
               FFmpegArgument.Stream.DispositionAction.Erase,
             ),
@@ -211,7 +211,7 @@ describe("FFmpeg builder", () => {
           .disposition(
             FFmpegArgument.Stream.Disposition(
               FFmpegArgument.Stream.DispositionTarget(
-                FFmpegArgument.Stream.Type.Audio,
+                FFmpegArgument.Stream.Type.Audio(),
                 0,
               ),
               FFmpegArgument.Stream.DispositionAction.MakeDefault,
@@ -238,7 +238,7 @@ describe("FFmpeg builder", () => {
           .disposition(
             FFmpegArgument.Stream.Disposition(
               FFmpegArgument.Stream.DispositionTarget(
-                FFmpegArgument.Stream.Type.Audio,
+                FFmpegArgument.Stream.Type.Audio(),
               ),
               FFmpegArgument.Stream.DispositionAction.Erase,
             ),
@@ -246,7 +246,7 @@ describe("FFmpeg builder", () => {
           .disposition(
             FFmpegArgument.Stream.Disposition(
               FFmpegArgument.Stream.DispositionTarget(
-                FFmpegArgument.Stream.Type.Audio,
+                FFmpegArgument.Stream.Type.Audio(),
                 0,
               ),
               FFmpegArgument.Stream.DispositionAction.MakeDefault,
@@ -393,7 +393,9 @@ describe("FFmpeg builder", () => {
   }
   {
     it("Hardware acceleration with ~8K H264 NVenc (which is limited to ~4K)", () => {
-      const video = FFmpegArgument.Track.AllVideosMonoInput(true);
+      const video = FFmpegArgument.Track.AllVideosMonoInput({
+        for_filter: true,
+      });
       assert.strictEqual(
         new FFmpegBuilder(binary)
           .input(FFmpegArgument.File(input))

@@ -132,7 +132,7 @@ export namespace FFmpegArgument {
     /** Index of the stream, starting from 0 */
     streamIndex: number | null;
     /** Type of the stream */
-    type: Stream.Type;
+    streamType: Stream.Type;
   }
   export namespace Stream {
     /** Internal possible types for a stream */
@@ -143,10 +143,14 @@ export namespace FFmpegArgument {
 
     /** Supported formats */
     export const Type = {
-      Audio: { type: Types.Audio, prefix: Types.Audio.charAt(0) },
-      Video: { type: Types.Video, prefix: Types.Video.charAt(0) },
+      Audio: () => ({ type: Types.Audio, prefix: Types.Audio.charAt(0) }),
+      Video: (dimensions?: { width: number; height: number }) => ({
+        type: Types.Video,
+        prefix: Types.Video.charAt(0),
+        dimensions,
+      }),
     } as const;
-    export type Type = (typeof Type)[keyof typeof Type];
+    export type Type = ReturnType<(typeof Type)[keyof typeof Type]>;
 
     export enum Unit {
       Kb = "k",
@@ -177,7 +181,7 @@ export namespace FFmpegArgument {
       bitrate: Bitrate,
       streamIndex: number = null,
     ): StreamData => ({
-      type,
+      streamType: type,
       streamIndex,
       bitrate: {
         ...bitrate,
@@ -193,7 +197,7 @@ export namespace FFmpegArgument {
       },
       toString() {
         return (
-          `-b:${this.type.prefix}` +
+          `-b:${this.streamType.prefix}` +
           (this.streamIndex !== null ? `:${this.streamIndex}` : "")
         );
       },
@@ -257,7 +261,7 @@ export namespace FFmpegArgument {
     isLabel: boolean = false,
   ): Track.Track => ({
     streamIndex,
-    type,
+    streamType: type,
     trackIndex,
     customName,
     toString: () =>
@@ -299,11 +303,26 @@ export namespace FFmpegArgument {
           : name,
       );
 
-    export const AllVideosMonoInput = (for_filter = false) =>
-      FFmpegArgument.Track(Stream.Type.Video, undefined, 0, for_filter);
+    export const AllVideosMonoInput = (
+      {
+        for_filter,
+        dimensions,
+      }: {
+        for_filter: boolean;
+        dimensions?: { width: number; height: number };
+      } = {
+        for_filter: false,
+      },
+    ) =>
+      FFmpegArgument.Track(
+        Stream.Type.Video(dimensions),
+        undefined,
+        0,
+        for_filter,
+      );
 
     export const AllAudiosMonoInput = FFmpegArgument.Track(
-      Stream.Type.Audio,
+      Stream.Type.Audio(),
       undefined,
       0,
     );
@@ -327,7 +346,7 @@ export namespace FFmpegArgument {
     }
 
     /** Specific audio track */
-    export const Audio = (index: number) => Track(Stream.Type.Audio, index);
+    export const Audio = (index: number) => Track(Stream.Type.Audio(), index);
 
     /** Attack a metadata to a track */
     export const Metadata = (
@@ -340,7 +359,7 @@ export namespace FFmpegArgument {
         key,
         value: title,
         toStringArray: () => [
-          `-metadata:s:${track.type.prefix}:${track.trackIndex}`,
+          `-metadata:s:${track.streamType.prefix}:${track.trackIndex}`,
           `${key}="${title}"`,
         ],
       };
@@ -353,7 +372,7 @@ export namespace FFmpegArgument {
      *  See: https://trac.ffmpeg.org/wiki/Encode/H.264#Encodingfordumbplayers */
     PixelFormatYUV420: (
       outTrack: Track,
-      inTrack = FFmpegArgument.Track.AllVideosMonoInput(true),
+      inTrack = FFmpegArgument.Track.AllVideosMonoInput({ for_filter: true }),
     ) =>
       ({
         in: inTrack,
@@ -365,7 +384,7 @@ export namespace FFmpegArgument {
       w: number,
       h: number,
       outTrack: Track,
-      inTrack = FFmpegArgument.Track.AllVideosMonoInput(true),
+      inTrack = FFmpegArgument.Track.AllVideosMonoInput({ for_filter: true }),
     ): Filter => ({
       in: inTrack,
       out: outTrack,
@@ -396,7 +415,7 @@ export namespace FFmpegArgument {
     Framerate: (
       fps: number,
       outTrack: Track,
-      inTrack = FFmpegArgument.Track.AllVideosMonoInput(true),
+      inTrack = FFmpegArgument.Track.AllVideosMonoInput({ for_filter: true }),
     ): Filter => ({
       in: inTrack,
       out: outTrack,
@@ -410,7 +429,9 @@ export namespace FFmpegArgument {
       outVideoTrack: Track,
       /** Ordered list */
       outAudioTracks: Track[],
-      inVideoTrack = FFmpegArgument.Track.AllVideosMonoInput(true),
+      inVideoTrack = FFmpegArgument.Track.AllVideosMonoInput({
+        for_filter: true,
+      }),
     ): Filter[] => [
       {
         in: inVideoTrack,
@@ -420,7 +441,7 @@ export namespace FFmpegArgument {
         },
       },
       ...outAudioTracks.map((out, i) => ({
-        in: Track(Stream.Type.Audio, i, 0, true),
+        in: Track(Stream.Type.Audio(), i, 0, true),
         out,
         expr: {
           default: () =>
@@ -671,7 +692,7 @@ export class FFmpegBuilder<
     // Video
     if (FFmpegBuilder.changed(this._videoCodec)) {
       args.push(
-        `-c:${FFmpegArgument.Stream.Type.Video.prefix}`,
+        `-c:${FFmpegArgument.Stream.Type.Video().prefix}`,
         (this._videoCodec[this._hw] ?? this._videoCodec.default).name,
       );
 
@@ -713,7 +734,8 @@ export class FFmpegBuilder<
         /** Extra data about bitrate for VBR */
         const vbr_args = (() => {
           const bitrate = this._bitrates.find(
-            (s) => s.type === FFmpegArgument.Stream.Type.Video,
+            (s) =>
+              s.streamType.type === FFmpegArgument.Stream.Type.Video().type,
           )?.bitrate;
           return bitrate
             ? [
@@ -771,7 +793,9 @@ export class FFmpegBuilder<
     }
 
     this._bitrates
-      .filter((s) => s.type === FFmpegArgument.Stream.Type.Video)
+      .filter(
+        (s) => s.streamType.type === FFmpegArgument.Stream.Type.Video().type,
+      )
       .forEach((s) => {
         args.push(s.toString(), s.bitrate.toString());
       });
@@ -785,8 +809,8 @@ export class FFmpegBuilder<
             if (
               pass === 1 &&
               (f.in === null ||
-                (f.in as FFmpegArgument.Stream).type ===
-                  FFmpegArgument.Stream.Type.Audio)
+                (f.in as FFmpegArgument.Stream).streamType ===
+                  FFmpegArgument.Stream.Type.Audio())
             ) {
               return hmap;
             }
@@ -852,13 +876,15 @@ export class FFmpegBuilder<
     // Audio
     if (FFmpegBuilder.changed(this._audioCodec)) {
       args.push(
-        `-c:${FFmpegArgument.Stream.Type.Audio.prefix}`,
+        `-c:${FFmpegArgument.Stream.Type.Audio().prefix}`,
         this._audioCodec,
       );
     }
 
     this._bitrates
-      .filter((s) => s.type === FFmpegArgument.Stream.Type.Audio)
+      .filter(
+        (s) => s.streamType.type === FFmpegArgument.Stream.Type.Audio().type,
+      )
       .forEach((s) => {
         args.push(s.toString(), s.bitrate.toString());
       });

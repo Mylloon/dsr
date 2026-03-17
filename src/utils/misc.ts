@@ -35,19 +35,27 @@ export const fetchMetadata = (file: string) => {
   const duration = parseFloat(data.format.duration);
 
   const audioBitrates: number[] = data.streams
-    .filter((s: any) => s.codec_type === FFmpegArgument.Stream.Type.Audio.type)
+    .filter(
+      (s: any) => s.codec_type === FFmpegArgument.Stream.Type.Audio().type,
+    )
     .map((s: any) => Number(s.bit_rate) / 1000);
 
   const is10bit: boolean = data.streams
-    .filter((s: any) => s.codec_type === FFmpegArgument.Stream.Type.Video.type)
+    .filter(
+      (s: any) => s.codec_type === FFmpegArgument.Stream.Type.Video().type,
+    )
     .every((s: any) => s.pix_fmt !== "yuv420p");
 
   const width: number = data.streams
-    .filter((s: any) => s.codec_type === FFmpegArgument.Stream.Type.Video.type)
+    .filter(
+      (s: any) => s.codec_type === FFmpegArgument.Stream.Type.Video().type,
+    )
     .find((s: any) => s.width)?.width;
 
   const height: number = data.streams
-    .filter((s: any) => s.codec_type === FFmpegArgument.Stream.Type.Video.type)
+    .filter(
+      (s: any) => s.codec_type === FFmpegArgument.Stream.Type.Video().type,
+    )
     .find((s: any) => s.height)?.height;
 
   const framerate: number = (() => {

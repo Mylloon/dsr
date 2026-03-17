@@ -136,7 +136,7 @@ app.whenReady().then(() => {
           .disposition(
             FFmpegArgument.Stream.Disposition(
               FFmpegArgument.Stream.DispositionTarget(
-                FFmpegArgument.Stream.Type.Audio,
+                FFmpegArgument.Stream.Type.Audio(),
               ),
               FFmpegArgument.Stream.DispositionAction.Erase,
             ),
@@ -144,7 +144,7 @@ app.whenReady().then(() => {
           .disposition(
             FFmpegArgument.Stream.Disposition(
               FFmpegArgument.Stream.DispositionTarget(
-                FFmpegArgument.Stream.Type.Audio,
+                FFmpegArgument.Stream.Type.Audio(),
                 0,
               ),
               FFmpegArgument.Stream.DispositionAction.MakeDefault,
@@ -281,7 +281,7 @@ app.whenReady().then(() => {
         .videoCodec(args.vCodec)
         .bitrate(
           FFmpegArgument.Stream.Bitrate(
-            FFmpegArgument.Stream.Type.Video,
+            FFmpegArgument.Stream.Type.Video(),
             bitrateKB(videoBitrate),
           ),
         )
@@ -292,7 +292,7 @@ app.whenReady().then(() => {
       audioBitrates.forEach((bitrate, i) => {
         builder.bitrate(
           FFmpegArgument.Stream.Bitrate(
-            FFmpegArgument.Stream.Type.Audio,
+            FFmpegArgument.Stream.Type.Audio(),
             bitrateKB(bitrate),
             i,
           ),

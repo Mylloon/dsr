@@ -87,7 +87,11 @@ export namespace FFmpegArgument {
             height: { min: 64, max: 4096 },
           },
         },
-        [HardwareBackend.Vulkan]: { name: "h264_vulkan" },
+        [HardwareBackend.Vulkan]: {
+          name: "h264_vulkan",
+          // Approximative constraint
+          constraints: { width: { max: 4096 }, height: { max: 4096 } },
+        },
         [HardwareBackend.QSV]: { name: "h264_qsv" },
         default: { name: "libx264" },
       },
@@ -102,7 +106,11 @@ export namespace FFmpegArgument {
             height: { min: 64, max: 4096 },
           },
         },
-        [HardwareBackend.Vulkan]: { name: "hevc_vulkan" },
+        [HardwareBackend.Vulkan]: {
+          name: "hevc_vulkan",
+          // Approximative constraint
+          constraints: { width: { max: 4096 }, height: { max: 4096 } },
+        },
         [HardwareBackend.QSV]: { name: "hevc_qsv" },
         default: { name: "libx265" },
       },

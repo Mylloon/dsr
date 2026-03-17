@@ -62,46 +62,62 @@ export namespace FFmpegArgument {
   }
 
   export namespace Codecs {
+    type VideoDefinition = {
+      name: string;
+      constraints?: {
+        width?: { min?: number; max?: number };
+        height?: { min?: number; max?: number };
+      };
+    };
     export const Video = {
       Copy: {
-        default: "copy",
+        default: { name: "copy" },
       },
       /** https://trac.ffmpeg.org/wiki/Encode/H.264 */
       H264: {
-        [HardwareBackend.Cuda]: "h264_nvenc",
-        [HardwareBackend.DirectX11]: "h264_amf",
-        [HardwareBackend.VAAPI]: "h264_vaapi",
-        [HardwareBackend.Vulkan]: "h264_vulkan",
-        [HardwareBackend.QSV]: "h264_qsv",
-        default: "libx264",
+        [HardwareBackend.Cuda]: {
+          name: "h264_nvenc",
+          constraints: { width: { max: 4096 }, height: { max: 4096 } },
+        },
+        [HardwareBackend.DirectX11]: { name: "h264_amf" },
+        [HardwareBackend.VAAPI]: {
+          name: "h264_vaapi",
+          constraints: {
+            width: { min: 64, max: 4096 },
+            height: { min: 64, max: 4096 },
+          },
+        },
+        [HardwareBackend.Vulkan]: { name: "h264_vulkan" },
+        [HardwareBackend.QSV]: { name: "h264_qsv" },
+        default: { name: "libx264" },
       },
       /** https://trac.ffmpeg.org/wiki/Encode/H.265 */
       H265: {
-        [HardwareBackend.Cuda]: "hevc_nvenc",
-        [HardwareBackend.DirectX11]: "hevc_amf",
-        [HardwareBackend.VAAPI]: "hevc_vaapi",
-        [HardwareBackend.Vulkan]: "hevc_vulkan",
-        [HardwareBackend.QSV]: "hevc_qsv",
-        default: "libx265",
+        [HardwareBackend.Cuda]: { name: "hevc_nvenc" },
+        [HardwareBackend.DirectX11]: { name: "hevc_amf" },
+        [HardwareBackend.VAAPI]: { name: "hevc_vaapi" },
+        [HardwareBackend.Vulkan]: { name: "hevc_vulkan" },
+        [HardwareBackend.QSV]: { name: "hevc_qsv" },
+        default: { name: "libx265" },
       },
       /** https://trac.ffmpeg.org/wiki/Encode/AV1 */
       AV1: {
-        [HardwareBackend.Cuda]: "av1_nvenc",
-        [HardwareBackend.DirectX11]: "av1_amf",
-        [HardwareBackend.VAAPI]: "av1_vaapi",
-        [HardwareBackend.Vulkan]: "av1_vulkan",
-        [HardwareBackend.QSV]: "av1_qsv",
-        default: "libaom-av1",
+        [HardwareBackend.Cuda]: { name: "av1_nvenc" },
+        [HardwareBackend.DirectX11]: { name: "av1_amf" },
+        [HardwareBackend.VAAPI]: { name: "av1_vaapi" },
+        [HardwareBackend.Vulkan]: { name: "av1_vulkan" },
+        [HardwareBackend.QSV]: { name: "av1_qsv" },
+        default: { name: "libaom-av1" },
       },
       /** https://trac.ffmpeg.org/wiki/Encode/VP9 */
       VP9: {
-        [HardwareBackend.VAAPI]: "vp9_vaapi",
-        [HardwareBackend.QSV]: "vp9_qsv",
-        default: "libvpx-vp9",
+        [HardwareBackend.VAAPI]: { name: "vp9_vaapi" },
+        [HardwareBackend.QSV]: { name: "vp9_qsv" },
+        default: { name: "libvpx-vp9" },
       },
     } as const;
-    export type Video = { default: string } & Partial<
-      Record<HardwareBackend, string>
+    export type Video = { default: VideoDefinition } & Partial<
+      Record<HardwareBackend, VideoDefinition>
     >;
 
     export enum Audio {
@@ -356,13 +372,22 @@ export namespace FFmpegArgument {
       expr: {
         [HardwareBackend.VAAPI]: () => `scale_vaapi=${w}:${h}`,
         default: (ctx: FilterContext) => {
-          const cap = {
-            [FFmpegArgument.Codecs.Video.H264[HardwareBackend.Cuda]]: {
-              w: 4096,
-              h: 4096,
-            },
-          }[ctx.hw];
-          const scale = cap ? Math.min(cap.w / w, cap.h / h, 1) : 1;
+          const constraints = ctx.vCodec?.constraints;
+          const scale = constraints
+            ? Math.min(
+                Math.min(
+                  constraints.width?.max ? constraints.width.max / w : 1,
+                  constraints.height?.max ? constraints.height.max / h : 1,
+                  1,
+                ),
+                Math.max(
+                  constraints.width?.min ? constraints.width.min / w : 1,
+                  constraints.height?.min ? constraints.height.min / h : 1,
+                  1,
+                ),
+              )
+            : 1;
+
           return `scale=${Math.floor(w * scale)}:${Math.floor(h * scale)}`;
         },
       },
@@ -434,7 +459,7 @@ export namespace FFmpegArgument {
   };
 
   export interface FilterContext {
-    hw: string;
+    vCodec: FFmpegArgument.Codecs.Video["default"];
   }
 }
 
@@ -647,7 +672,7 @@ export class FFmpegBuilder<
     if (FFmpegBuilder.changed(this._videoCodec)) {
       args.push(
         `-c:${FFmpegArgument.Stream.Type.Video.prefix}`,
-        this._videoCodec[this._hw] ?? this._videoCodec.default,
+        (this._videoCodec[this._hw] ?? this._videoCodec.default).name,
       );
 
       // Add encoder flags
@@ -777,7 +802,7 @@ export class FFmpegBuilder<
             `${fs[0].in ?? ""}${fs
               .map((f) => f.expr[this._hw] ?? f.expr.default)
               .map((f_builder) =>
-                f_builder({ hw: this._videoCodec[this._hw] ?? null }),
+                f_builder({ vCodec: this._videoCodec[this._hw] }),
               )
               .join(",")}${(pass === 1 ? null : fs[0].out) ?? ""}`,
         )

@@ -314,7 +314,7 @@ describe("FFmpeg builder", () => {
         new FFmpegBuilder(binary)
           .input(FFmpegArgument.File(input))
           .output(FFmpegArgument.File(output))
-          .videoCodec({ default: test_codec })
+          .videoCodec({ default: { name: test_codec } })
           .tracks(FFmpegArgument.Track.AllVideosMonoInput())
           .hardwareAcceleration(FFmpegArgument.HardwareBackend.VAAPI)
           .toString(),

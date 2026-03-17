@@ -662,6 +662,9 @@ export class FFmpegBuilder<
           case FFmpegArgument.HardwareBackend.VAAPI: {
             hw.push("-vaapi_device", "/dev/dri/renderD128");
           }
+          case FFmpegArgument.HardwareBackend.Vulkan: {
+            hw.push("-init_hw_device", "vulkan=vk");
+          }
         }
       }
       args.push(...hw);

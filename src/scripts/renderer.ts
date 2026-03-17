@@ -32,7 +32,10 @@ let internals: {
   ) => Promise<string>;
   moveMetadata: (file: string, nbTracks: number) => Promise<string>;
   confirmation: (text: string) => Promise<void>;
-  wantedEncoder: (isFile10bit: boolean) => Promise<{
+  wantedEncoder: (
+    isFile10bit: boolean,
+    dimensions: { width: number; height: number },
+  ) => Promise<{
     codec: string;
     hw: boolean;
   }>;
@@ -140,7 +143,10 @@ const main = async () => {
 
       updateMessage("\nSélection de l'encodeur...", true, Mode.Append);
 
-      const { codec, hw } = await internals.wantedEncoder(newFile.is10bit);
+      const { codec, hw } = await internals.wantedEncoder(newFile.is10bit, {
+        width: newFile.width,
+        height: newFile.height,
+      });
 
       updateMessage(
         `${fileSizeMessage}\nFichier trop lourd, compression en cours avec ${codec}` +

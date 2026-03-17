@@ -121,6 +121,8 @@ export const outputType = (file: string, type: FFmpegArgument.Formats) =>
     path.basename(file, path.extname(file)) + "." + type,
   );
 
+export type Dimensions = { width: number; height: number };
+
 /** Find a compatible GPU backend
  *
  * @returns `undefined` if no suitable backend has been found
@@ -128,10 +130,23 @@ export const outputType = (file: string, type: FFmpegArgument.Formats) =>
 export const findOptimalBackend = async (
   ffmpegPath: string,
   codec: FFmpegArgument.Codecs.Video,
+  dimensions?: Dimensions,
 ) => {
-  const backends = Object.values(FFmpegArgument.HardwareBackend).filter(
-    (backend) => codec[backend as keyof typeof codec],
-  );
+  const backends = Object.values(FFmpegArgument.HardwareBackend)
+    .filter((backend) => codec[backend as keyof typeof codec])
+    // Filter backends that doesn't support asked video dimensions
+    // Our hw-accel implementation is used in encoding and decoding
+    // -> we need to support the size for encoding into the GPU without the scaler
+    .filter((backend) => {
+      const { constraints: c } = codec[backend as keyof typeof codec];
+      return (
+        !c ||
+        (dimensions.width >= (c.width.min ?? 0) &&
+          dimensions.width <= (c.width.max ?? Infinity) &&
+          dimensions.height >= (c.height.min ?? 0) &&
+          dimensions.height <= (c.height.max ?? Infinity))
+      );
+    });
 
   for (const backend of backends) {
     if (await testBackend(ffmpegPath, backend)) {

@@ -1,10 +1,11 @@
-import { BrowserWindow, Notification, app, dialog, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, Notification } from "electron";
 import { copyFileSync, realpathSync, statSync } from "fs";
 
 import { parseArgs } from "./utils/cli";
 import { FFmpegArgument, FFmpegBuilder } from "./utils/ffmpeg";
 import {
   deleteFile,
+  Dimensions,
   doesFileExists,
   execute,
   fetchMetadata,
@@ -191,7 +192,10 @@ app.whenReady().then(() => {
   };
 
   /** Returns selected encoder and if we use hardware acceleration */
-  const encoderInfo = async (isFile10bit: boolean) => {
+  const encoderInfo = async (
+    isFile10bit: boolean,
+    videoDimensions: Dimensions,
+  ) => {
     const res = parseArgs(process.argv);
 
     // No hardware support
@@ -208,15 +212,22 @@ app.whenReady().then(() => {
 
     // User asked for no specific hardware backend
     if (res.hw === undefined) {
-      res.hw = await findOptimalBackend(ffmpegPath, res.vCodec);
+      res.hw = await findOptimalBackend(
+        ffmpegPath,
+        res.vCodec,
+        videoDimensions,
+      );
     }
 
     return res;
   };
 
   /** Export info for frontend */
-  const exportEncoderInfo = async (isFile10bit: boolean) => {
-    const data = await encoderInfo(isFile10bit);
+  const exportEncoderInfo = async (
+    isFile10bit: boolean,
+    videoDimensions: Dimensions,
+  ) => {
+    const data = await encoderInfo(isFile10bit, videoDimensions);
 
     return {
       codec: Object.entries(FFmpegArgument.Codecs.Video).find(([, codec]) => {
@@ -272,7 +283,7 @@ app.whenReady().then(() => {
     if (videoBitrate > 0) {
       finalFile = outputType(getNewFilename(file, "Compressed - "), type);
 
-      const args = await encoderInfo(is10bit);
+      const args = await encoderInfo(is10bit, { width, height });
 
       const builder = new FFmpegBuilder(ffmpegPath)
         .yes()
@@ -464,8 +475,10 @@ app.whenReady().then(() => {
   );
   ipcMain.handle("exit", () => (error ? {} : app.quit()));
   ipcMain.handle("confirmation", (_, text: string) => confirmation(text));
-  ipcMain.handle("wantedEncoder", (_, is10Bit: boolean) =>
-    exportEncoderInfo(is10Bit),
+  ipcMain.handle(
+    "wantedEncoder",
+    (_, is10Bit: boolean, dimensions: Dimensions) =>
+      exportEncoderInfo(is10Bit, dimensions),
   );
   ipcMain.handle("getArguments", () => parseArgs(process.argv));
 });

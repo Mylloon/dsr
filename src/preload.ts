@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
+import { Dimensions } from "./utils/misc";
 
 /* Log errors */
 ipcRenderer.on("error", (_, err) => {
@@ -40,8 +41,8 @@ contextBridge.exposeInMainWorld("internals", {
     ),
   moveMetadata: (file: string, nbTracks: number) =>
     ipcRenderer.invoke("moveMetadata", file, nbTracks),
-  wantedEncoder: (isFile10bit: boolean) =>
-    ipcRenderer.invoke("wantedEncoder", isFile10bit),
+  wantedEncoder: (isFile10bit: boolean, dimensions: Dimensions) =>
+    ipcRenderer.invoke("wantedEncoder", isFile10bit, dimensions),
   exit: () => ipcRenderer.invoke("exit"),
   confirmation: (text: string) => ipcRenderer.invoke("confirmation", text),
   getArguments: () => ipcRenderer.invoke("getArguments"),

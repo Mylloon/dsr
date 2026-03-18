@@ -1,6 +1,6 @@
 {
   "name": "dsr",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Discord Video Sharing",
   "main": "./dist/main.js",
   "scripts": {

@@ -193,27 +193,18 @@ describe("FFmpeg builder", () => {
           )
           .tracks(
             // Copy all audio from second input
-            FFmpegArgument.Track(
-              FFmpegArgument.Stream.Type.Audio,
-              undefined,
-              1,
-            ),
+            FFmpegArgument.Track(FFmpegArgument.Stream.Type.Audio, undefined, 1),
           )
           .videoCodec(FFmpegArgument.Codecs.Video.Copy)
           .disposition(
             FFmpegArgument.Stream.Disposition(
-              FFmpegArgument.Stream.DispositionTarget(
-                FFmpegArgument.Stream.Type.Audio,
-              ),
+              FFmpegArgument.Stream.DispositionTarget(FFmpegArgument.Stream.Type.Audio),
               FFmpegArgument.Stream.DispositionAction.Erase,
             ),
           )
           .disposition(
             FFmpegArgument.Stream.Disposition(
-              FFmpegArgument.Stream.DispositionTarget(
-                FFmpegArgument.Stream.Type.Audio,
-                0,
-              ),
+              FFmpegArgument.Stream.DispositionTarget(FFmpegArgument.Stream.Type.Audio, 0),
               FFmpegArgument.Stream.DispositionAction.MakeDefault,
             ),
           )
@@ -237,18 +228,13 @@ describe("FFmpeg builder", () => {
           .filter(FFmpegArgument.Filter.Custom(filter))
           .disposition(
             FFmpegArgument.Stream.Disposition(
-              FFmpegArgument.Stream.DispositionTarget(
-                FFmpegArgument.Stream.Type.Audio,
-              ),
+              FFmpegArgument.Stream.DispositionTarget(FFmpegArgument.Stream.Type.Audio),
               FFmpegArgument.Stream.DispositionAction.Erase,
             ),
           )
           .disposition(
             FFmpegArgument.Stream.Disposition(
-              FFmpegArgument.Stream.DispositionTarget(
-                FFmpegArgument.Stream.Type.Audio,
-                0,
-              ),
+              FFmpegArgument.Stream.DispositionTarget(FFmpegArgument.Stream.Type.Audio, 0),
               FFmpegArgument.Stream.DispositionAction.MakeDefault,
             ),
           )
@@ -268,24 +254,9 @@ describe("FFmpeg builder", () => {
           .audioCodec(FFmpegArgument.Codecs.Audio.Copy)
           .tracks(FFmpegArgument.Track.AllVideosMonoInput())
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
-          .customMetadata(
-            FFmpegArgument.Track.Metadata(
-              FFmpegArgument.Track.Audio(0),
-              metadata[0],
-            ),
-          )
-          .customMetadata(
-            FFmpegArgument.Track.Metadata(
-              FFmpegArgument.Track.Audio(1),
-              metadata[1],
-            ),
-          )
-          .customMetadata(
-            FFmpegArgument.Track.Metadata(
-              FFmpegArgument.Track.Audio(2),
-              metadata[2],
-            ),
-          )
+          .customMetadata(FFmpegArgument.Track.Metadata(FFmpegArgument.Track.Audio(0), metadata[0]))
+          .customMetadata(FFmpegArgument.Track.Metadata(FFmpegArgument.Track.Audio(1), metadata[1]))
+          .customMetadata(FFmpegArgument.Track.Metadata(FFmpegArgument.Track.Audio(2), metadata[2]))
           .toString(),
         `"${binary}" -i "${input}" -c:v copy -c:a copy -map 0:v -map 0:a -metadata:s:a:0 title="${metadata[0]}" -metadata:s:a:1 title="${metadata[1]}" -metadata:s:a:2 title="${metadata[2]}" "${output}"`,
       );
@@ -328,12 +299,8 @@ describe("FFmpeg builder", () => {
       const output_test = "-";
       assert.strictEqual(
         new FFmpegBuilder(binary)
-          .input(
-            FFmpegArgument.File(input_test, FFmpegArgument.Formats.Libavfilter),
-          )
-          .output(
-            FFmpegArgument.File(output_test, FFmpegArgument.Formats.NULL, 0.1),
-          )
+          .input(FFmpegArgument.File(input_test, FFmpegArgument.Formats.Libavfilter))
+          .output(FFmpegArgument.File(output_test, FFmpegArgument.Formats.NULL, 0.1))
           .videoCodec(FFmpegArgument.Codecs.Video.H264)
           .hardwareAcceleration(FFmpegArgument.HardwareBackend.VAAPI, true)
           .toString(),

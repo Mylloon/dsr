@@ -28,10 +28,7 @@ const ffmpegPath = (() => {
     });
     return bin;
   } catch {
-    return `${require("ffmpeg-static")}`.replace(
-      "app.asar",
-      "app.asar.unpacked",
-    );
+    return `${require("ffmpeg-static")}`.replace("app.asar", "app.asar.unpacked");
   }
 })();
 
@@ -43,11 +40,7 @@ const moviesFilter = {
   extensions: ["mp4", "mkv"],
 };
 
-const metadataTitles = [
-  "System sounds and microphone",
-  "System sounds",
-  "Microphone",
-];
+const metadataTitles = ["System sounds and microphone", "System sounds", "Microphone"];
 
 /** Register a new error  */
 const registerError = (win: BrowserWindow, err: string) => {
@@ -136,18 +129,13 @@ app.whenReady().then(() => {
           .filter(FFmpegArgument.Filter.Custom(filter))
           .disposition(
             FFmpegArgument.Stream.Disposition(
-              FFmpegArgument.Stream.DispositionTarget(
-                FFmpegArgument.Stream.Type.Audio,
-              ),
+              FFmpegArgument.Stream.DispositionTarget(FFmpegArgument.Stream.Type.Audio),
               FFmpegArgument.Stream.DispositionAction.Erase,
             ),
           )
           .disposition(
             FFmpegArgument.Stream.Disposition(
-              FFmpegArgument.Stream.DispositionTarget(
-                FFmpegArgument.Stream.Type.Audio,
-                0,
-              ),
+              FFmpegArgument.Stream.DispositionTarget(FFmpegArgument.Stream.Type.Audio, 0),
               FFmpegArgument.Stream.DispositionAction.MakeDefault,
             ),
           );
@@ -192,10 +180,7 @@ app.whenReady().then(() => {
   };
 
   /** Returns selected encoder and if we use hardware acceleration */
-  const encoderInfo = async (
-    isFile10bit: boolean,
-    videoDimensions: Dimensions,
-  ) => {
+  const encoderInfo = async (isFile10bit: boolean, videoDimensions: Dimensions) => {
     const res = parseArgs(process.argv);
 
     // No hardware support
@@ -212,21 +197,14 @@ app.whenReady().then(() => {
 
     // User asked for no specific hardware backend
     if (res.hw === undefined) {
-      res.hw = await findOptimalBackend(
-        ffmpegPath,
-        res.vCodec,
-        videoDimensions,
-      );
+      res.hw = await findOptimalBackend(ffmpegPath, res.vCodec, videoDimensions);
     }
 
     return res;
   };
 
   /** Export info for frontend */
-  const exportEncoderInfo = async (
-    isFile10bit: boolean,
-    videoDimensions: Dimensions,
-  ) => {
+  const exportEncoderInfo = async (isFile10bit: boolean, videoDimensions: Dimensions) => {
     const data = await encoderInfo(isFile10bit, videoDimensions);
 
     return {
@@ -272,10 +250,8 @@ app.whenReady().then(() => {
     const scaledBitrate = Math.round(bitrate * bitrateratio);
     // When speed > 1 : we multiply bitrate by speed
     // When speed < 1 : we still increase bitrate but by a reduced factor
-    const bitrateWithSpeed =
-      scaledBitrate * (speed >= 1 ? speed : 1 + 0.05 * (1 - speed));
-    const videoBitrate =
-      bitrateWithSpeed - audioBitrates.reduce((acc, cur) => acc + cur, 0);
+    const bitrateWithSpeed = scaledBitrate * (speed >= 1 ? speed : 1 + 0.05 * (1 - speed));
+    const videoBitrate = bitrateWithSpeed - audioBitrates.reduce((acc, cur) => acc + cur, 0);
 
     const type = FFmpegArgument.Formats.MP4;
     let finalFile;
@@ -291,10 +267,7 @@ app.whenReady().then(() => {
         .output(FFmpegArgument.File(finalFile, type))
         .videoCodec(args.vCodec)
         .bitrate(
-          FFmpegArgument.Stream.Bitrate(
-            FFmpegArgument.Stream.Type.Video,
-            bitrateKB(videoBitrate),
-          ),
+          FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Video, bitrateKB(videoBitrate)),
         )
         .audioCodec(FFmpegArgument.Codecs.Audio.AAC)
         .streamingOptimization();
@@ -302,18 +275,11 @@ app.whenReady().then(() => {
       // Compress audio and add metadata
       audioBitrates.forEach((bitrate, i) => {
         builder.bitrate(
-          FFmpegArgument.Stream.Bitrate(
-            FFmpegArgument.Stream.Type.Audio,
-            bitrateKB(bitrate),
-            i,
-          ),
+          FFmpegArgument.Stream.Bitrate(FFmpegArgument.Stream.Type.Audio, bitrateKB(bitrate), i),
         );
         i < metadataTitles.length &&
           builder.customMetadata(
-            FFmpegArgument.Track.Metadata(
-              FFmpegArgument.Track.Audio(i),
-              metadataTitles[i],
-            ),
+            FFmpegArgument.Track.Metadata(FFmpegArgument.Track.Audio(i), metadataTitles[i]),
           );
       });
 
@@ -324,9 +290,7 @@ app.whenReady().then(() => {
         /** Minimal condition that triggers a new compression level */
         minimal(): number {
           // Highest bitrate needed causing compression specific logic
-          return Math.max(
-            ...Object.values(this).filter((v) => typeof v === "number"),
-          );
+          return Math.max(...Object.values(this).filter((v) => typeof v === "number"));
         },
       };
 
@@ -343,17 +307,13 @@ app.whenReady().then(() => {
       builder.tracks(videoTrack);
 
       const audioTracks = speed_cond
-        ? audioTracksBitrate.map((_, i) =>
-            FFmpegArgument.Track.customTrack(`a${i}_newspeed`),
-          )
+        ? audioTracksBitrate.map((_, i) => FFmpegArgument.Track.customTrack(`a${i}_newspeed`))
         : [FFmpegArgument.Track.AllAudiosMonoInput];
       audioTracks.forEach((track) => builder.tracks(track, false));
 
       // Speed up file
       if (speed_cond) {
-        builder.filter(
-          FFmpegArgument.Filter.Speed(speed, videoTrack, audioTracks),
-        );
+        builder.filter(FFmpegArgument.Filter.Speed(speed, videoTrack, audioTracks));
       }
 
       if (args.hw) {
@@ -375,16 +335,12 @@ app.whenReady().then(() => {
 
       // Capping FPS
       if (bitrate < level.medium) {
-        builder.filter(
-          FFmpegArgument.Filter.Framerate(Math.min(framerate, 30), videoTrack),
-        );
+        builder.filter(FFmpegArgument.Filter.Framerate(Math.min(framerate, 30), videoTrack));
       }
 
       // Reduce dimensions
       if (bitrate < level.high) {
-        builder.filter(
-          FFmpegArgument.Filter.Scaler(width / 1.5, height / 1.5, videoTrack),
-        );
+        builder.filter(FFmpegArgument.Filter.Scaler(width / 1.5, height / 1.5, videoTrack));
       }
 
       // Start compression
@@ -421,9 +377,7 @@ app.whenReady().then(() => {
 
     if (nbTracks === metadataTitles.length) {
       metadataTitles.forEach((title, i) => {
-        builder.customMetadata(
-          FFmpegArgument.Track.Metadata(FFmpegArgument.Track.Audio(i), title),
-        );
+        builder.customMetadata(FFmpegArgument.Track.Metadata(FFmpegArgument.Track.Audio(i), title));
       });
     }
 
@@ -475,10 +429,8 @@ app.whenReady().then(() => {
   );
   ipcMain.handle("exit", () => (error ? {} : app.quit()));
   ipcMain.handle("confirmation", (_, text: string) => confirmation(text));
-  ipcMain.handle(
-    "wantedEncoder",
-    (_, is10Bit: boolean, dimensions: Dimensions) =>
-      exportEncoderInfo(is10Bit, dimensions),
+  ipcMain.handle("wantedEncoder", (_, is10Bit: boolean, dimensions: Dimensions) =>
+    exportEncoderInfo(is10Bit, dimensions),
   );
   ipcMain.handle("getArguments", () => parseArgs(process.argv));
 });

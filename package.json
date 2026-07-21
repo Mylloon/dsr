@@ -48,5 +48,9 @@
         }
       ]
     }
+  },
+  "allowScripts": {
+    "@derhuerst/ffprobe-static": true,
+    "ffmpeg-static": true
   }
 }

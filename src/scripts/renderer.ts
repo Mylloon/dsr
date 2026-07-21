@@ -48,14 +48,14 @@ let internals: {
 
 /** Search for files */
 const getFiles = async () => {
-  const allowedExtensions = (await internals.allowedExtensions()).extensions;
-  const currentDir = await internals.cwd();
+  const allowedExtensions = (await internals!.allowedExtensions()).extensions;
+  const currentDir = await internals!.cwd();
   const argvFiles = (
     await Promise.all(
-      (await internals.argv())
+      (await internals!.argv())
         .slice(1)
         .filter((file) => file !== ".")
-        .map(internals.resolveSymlink),
+        .map(internals!.resolveSymlink),
     )
   )
     // Remove commands args
@@ -69,18 +69,18 @@ const getFiles = async () => {
     // Exit if a file isn't supported in the list
     if (
       files.filter((file) =>
-        allowedExtensions.some((ext) => file.toLowerCase().endsWith(ext.toLowerCase())),
+        allowedExtensions.some((ext) => file?.toLowerCase().endsWith(ext.toLowerCase())),
       ).length !== files.length
     ) {
-      await internals.exit();
+      await internals!.exit();
     }
 
     return files;
   }
 
-  const files = await internals.askFiles();
+  const files = await internals!.askFiles();
   if (files === undefined || files.length === 0) {
-    await internals.exit();
+    await internals!.exit();
   }
   return files;
 };
@@ -95,33 +95,33 @@ enum Mode {
 const updateMessage = (message: string, load: boolean = false, mode: Mode = Mode.Write) => {
   switch (mode) {
     case Mode.Write:
-      document.getElementById("message").innerText = message;
+      document.getElementById("message")!.innerText = message;
       break;
 
     case Mode.Append:
-      document.getElementById("message").innerText += message;
+      document.getElementById("message")!.innerText += message;
       break;
 
     default:
       break;
   }
-  document.getElementById("load").style.visibility = load ? "visible" : "hidden";
+  document.getElementById("load")!.style.visibility = load ? "visible" : "hidden";
 };
 
 /** Main function */
 const main = async () => {
-  const args = await internals.getArguments();
+  const args = await internals!.getArguments();
   updateMessage("Récupération des fichiers...");
   const files = await getFiles();
   let processedFiles = "";
   let numberOfUncompressableFiles = 0;
 
   // Iterate over all the retrieved files
-  for (const [idx, file] of files.entries()) {
-    const counter = `${idx + 1}/${files.length}`;
-    const filename = await internals.getFilename(file);
+  for (const [idx, file] of files!.entries()) {
+    const counter = `${idx + 1}/${files?.length}`;
+    const filename = await internals!.getFilename(file!);
     updateMessage(`${counter} - Mélange des pistes audios de ${filename}...`, true);
-    const newFile = await internals.mergeAudio(file);
+    const newFile = await internals!.mergeAudio(file!);
     let finalTitle = newFile.title;
     const fileSizeMessage = `${counter} - Taille actuelle : ~${Math.round(newFile.size)}Mio`;
     updateMessage(fileSizeMessage);
@@ -132,7 +132,7 @@ const main = async () => {
 
       updateMessage("\nSélection de l'encodeur...", true, Mode.Append);
 
-      const { codec, hw } = await internals.wantedEncoder(newFile.is10bit, {
+      const { codec, hw } = await internals!.wantedEncoder(newFile.is10bit, {
         width: newFile.width,
         height: newFile.height,
       });
@@ -148,7 +148,7 @@ const main = async () => {
       const bitrate = Math.floor((targetSize * 8388.608) / newFile.duration);
 
       // Compress the video and change the title to the new one
-      finalTitle = await internals.reduceSize(
+      finalTitle = await internals!.reduceSize(
         newFile.title,
         bitrate,
         newFile.audioTracks,
@@ -163,7 +163,7 @@ const main = async () => {
       updateMessage(`\nPréparation pour le partage...`, true, Mode.Append);
 
       // Move the metadata to make it playable before everything is downloaded
-      finalTitle = await internals.moveMetadata(newFile.title, newFile.audioTracks.length);
+      finalTitle = await internals!.moveMetadata(newFile.title, newFile.audioTracks.length);
     }
 
     // Append title to the list of processed files
@@ -183,11 +183,11 @@ const main = async () => {
   }
 
   // Send confirmation to the user that we're done
-  await internals.confirmation(
-    `${files.length} fichiers traités : ${processedFiles}` + errorMessage,
+  await internals!.confirmation(
+    `${files?.length} fichiers traités : ${processedFiles}` + errorMessage,
   );
 
-  await internals.exit();
+  await internals!.exit();
 };
 
 main();

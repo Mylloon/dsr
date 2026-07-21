@@ -28,8 +28,8 @@ export namespace FFmpegArgument {
   /** Create a FFmpeg File */
   export const File = (
     path: string,
-    format: Formats = undefined,
-    duration: number = undefined,
+    format: Formats | undefined = undefined,
+    duration: number | undefined = undefined,
   ): File => ({
     path,
     options: {
@@ -189,7 +189,7 @@ export namespace FFmpegArgument {
     export const Bitrate = (
       type: Type,
       bitrate: Bitrate,
-      streamIndex: number = null,
+      streamIndex: number | null = null,
     ): StreamData => ({
       streamType: type,
       streamIndex,
@@ -226,7 +226,10 @@ export namespace FFmpegArgument {
       index: number | null;
     }
 
-    export const DispositionTarget = (type: Type, index: number = null): DispositionTarget => ({
+    export const DispositionTarget = (
+      type: Type,
+      index: number | null = null,
+    ): DispositionTarget => ({
       type,
       index,
     });
@@ -259,14 +262,14 @@ export namespace FFmpegArgument {
   }
 
   const newTrack = (
-    type: Stream.Type = null,
-    trackIndex: number = null,
-    streamIndex: number = null,
-    customName: string = null,
+    type: Stream.Type | null = null,
+    trackIndex: number | null = null,
+    streamIndex: number | null = null,
+    customName: string | null = null,
     isLabel: boolean = false,
   ): Track.Track => ({
     streamIndex,
-    streamType: type,
+    streamType: type!,
     trackIndex,
     customName,
     toString: () =>
@@ -280,9 +283,9 @@ export namespace FFmpegArgument {
         : `[${customName}]`,
   });
   export function Track(
-    type: Stream.Type = null,
-    trackIndex: number = null,
-    streamIndex: number = null,
+    type: Stream.Type | null = null,
+    trackIndex: number | null = null,
+    streamIndex: number | null = null,
     filteredTrack: boolean = false,
   ): Track.Track {
     return newTrack(type, trackIndex, streamIndex, null, filteredTrack);
@@ -298,12 +301,12 @@ export namespace FFmpegArgument {
       toString(): string;
     }
 
-    export const customTrack = (name: string = null): Track =>
+    export const customTrack = (name: string | null = null): Track =>
       newTrack(
         undefined,
         undefined,
         undefined,
-        name.startsWith("[") && name.endsWith("]") ? name.slice(1, name.length - 1) : name,
+        name?.startsWith("[") && name.endsWith("]") ? name.slice(1, name.length - 1) : name,
       );
 
     export const AllVideosMonoInput = (for_filter = false) =>
@@ -487,17 +490,17 @@ export class FFmpegBuilder<HasInput extends boolean = false, HasOutput extends b
   private _input: FFmpegArgument.File[] = [];
   private _output: FFmpegArgument.File = FFmpegArgument.File("");
   private _forceOverwrite: boolean = false;
-  private _twoPass: string = null;
-  private _hw: FFmpegArgument.HardwareBackend = null;
+  private _twoPass: string | null = null;
+  private _hw: FFmpegArgument.HardwareBackend | null = null;
   private _hw_debug: boolean = false;
 
   // Video Settings
-  private _videoCodec: FFmpegArgument.Codecs.Video = null;
+  private _videoCodec: FFmpegArgument.Codecs.Video | null = null;
   private _bitrates: FFmpegArgument.Stream.StreamData[] = [];
   private _filterComplex: FFmpegArgument.Filter[] = [];
 
   // Audio/Structure Settings
-  private _audioCodec: FFmpegArgument.Codecs.Audio = null;
+  private _audioCodec: FFmpegArgument.Codecs.Audio | null = null;
   private _trackMappings: string[] = [];
   private _metadata: FFmpegArgument.Track.MetadataPrintable[] = [];
   private _movFlags: string[] = [];
@@ -564,7 +567,7 @@ export class FFmpegBuilder<HasInput extends boolean = false, HasOutput extends b
   }
 
   /** Use 2-pass method to get better compression results */
-  twopass(nullOutput: FFmpegArgument.SystemNULL = null) {
+  twopass(nullOutput: FFmpegArgument.SystemNULL | null = null) {
     if (nullOutput === null) {
       this._twoPass = this.onWindows
         ? FFmpegArgument.SystemNULL.Windows
@@ -631,7 +634,7 @@ export class FFmpegBuilder<HasInput extends boolean = false, HasOutput extends b
   }
 
   /** Generate FFmpeg call */
-  private build(pass: 1 | 2 = null) {
+  private build(pass: 1 | 2 | null = null) {
     const args = [];
 
     // Binary
@@ -646,7 +649,7 @@ export class FFmpegBuilder<HasInput extends boolean = false, HasOutput extends b
     if (
       FFmpegBuilder.changed(this._hw) &&
       FFmpegBuilder.changed(this._videoCodec) &&
-      this._videoCodec[this._hw]
+      this._videoCodec![this._hw!]
     ) {
       const hw = ["-hwaccel", this._hw];
       if (!this.onWindows) {
@@ -680,11 +683,11 @@ export class FFmpegBuilder<HasInput extends boolean = false, HasOutput extends b
     if (FFmpegBuilder.changed(this._videoCodec)) {
       args.push(
         `-c:${FFmpegArgument.Stream.Type.Video.prefix}`,
-        (this._videoCodec[this._hw] ?? this._videoCodec.default).name,
+        (this._videoCodec![this._hw!] ?? this._videoCodec!.default).name,
       );
 
       // Add encoder flags
-      if (!FFmpegBuilder.changed(this._hw) || this._videoCodec[this._hw] === undefined) {
+      if (!FFmpegBuilder.changed(this._hw) || this._videoCodec![this._hw!] === undefined) {
         // No hardware acceleration
         switch (this._videoCodec) {
           case FFmpegArgument.Codecs.Video.H264: {
@@ -732,7 +735,7 @@ export class FFmpegBuilder<HasInput extends boolean = false, HasOutput extends b
         })();
 
         // Do not add thoses flags if we are testing hardware support
-        if (!this._hw_debug && this._videoCodec[this._hw]) {
+        if (!this._hw_debug && this._videoCodec![this._hw!]) {
           switch (this._hw) {
             case FFmpegArgument.HardwareBackend.Cuda: {
               args.push("-rc", "vbr");
@@ -801,8 +804,8 @@ export class FFmpegBuilder<HasInput extends boolean = false, HasOutput extends b
           (fs) =>
             // They share same IN/OUT
             `${fs[0].in ?? ""}${fs
-              .map((f) => f.expr[this._hw] ?? f.expr.default)
-              .map((f_builder) => f_builder({ vCodec: this._videoCodec[this._hw] }))
+              .map((f) => f.expr[this._hw!] ?? f.expr.default)
+              .map((f_builder) => f_builder({ vCodec: this._videoCodec![this._hw!]! }))
               .join(",")}${(pass === 1 ? null : fs[0].out) ?? ""}`,
         )
         .join(",");

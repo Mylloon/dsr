@@ -133,13 +133,13 @@ export const findOptimalBackend = async (
     // Our hw-accel implementation is used in encoding and decoding
     // -> we need to support the size for encoding into the GPU without the scaler
     .filter((backend) => {
-      const { constraints: c } = codec[backend as keyof typeof codec];
+      const { constraints: c } = codec[backend as keyof typeof codec]!;
       return (
         !c ||
-        (dimensions.width >= (c.width.min ?? 0) &&
-          dimensions.width <= (c.width.max ?? Infinity) &&
-          dimensions.height >= (c.height.min ?? 0) &&
-          dimensions.height <= (c.height.max ?? Infinity))
+        (dimensions!.width >= (c.width?.min ?? 0) &&
+          dimensions!.width <= (c.width?.max ?? Infinity) &&
+          dimensions!.height >= (c.height?.min ?? 0) &&
+          dimensions!.height <= (c.height?.max ?? Infinity))
       );
     });
 

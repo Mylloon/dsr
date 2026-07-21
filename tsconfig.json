@@ -3,6 +3,7 @@
     "module": "node20",
     "outDir": "dist",
     "rootDir": "./src",
+    "strict": true,
   },
   "include": ["./**/*.ts"],
   "exclude": ["tests"],

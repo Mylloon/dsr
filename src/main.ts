@@ -437,7 +437,7 @@ app.whenReady().then(() => {
 
 app.on("window-all-closed", () => {
   processes.forEach((process) => {
-    process.stdin.write("q");
+    process.stdin?.write("q");
   });
 
   app.quit();

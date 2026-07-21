@@ -76,9 +76,7 @@ export const printAndDevTool = (win: BrowserWindow, err: string) => {
 };
 
 /** Run a command asynchronously */
-export const execute = (
-  command: string,
-): Promise<{ stdout: string; stderr: string }> => {
+export const execute = (command: string): Promise<{ stdout: string; stderr: string }> => {
   return new Promise((resolve, reject) => {
     const process = exec(command, (error, stdout, stderr) => {
       if (error) {
@@ -116,10 +114,7 @@ export const doesFileExists = (file: string) => {
 
 /** Assure us that the extension correspond to a type */
 export const outputType = (file: string, type: FFmpegArgument.Formats) =>
-  path.join(
-    path.dirname(file),
-    path.basename(file, path.extname(file)) + "." + type,
-  );
+  path.join(path.dirname(file), path.basename(file, path.extname(file)) + "." + type);
 
 export type Dimensions = { width: number; height: number };
 
@@ -138,13 +133,13 @@ export const findOptimalBackend = async (
     // Our hw-accel implementation is used in encoding and decoding
     // -> we need to support the size for encoding into the GPU without the scaler
     .filter((backend) => {
-      const { constraints: c } = codec[backend as keyof typeof codec];
+      const { constraints: c } = codec[backend as keyof typeof codec]!;
       return (
         !c ||
-        (dimensions.width >= (c.width.min ?? 0) &&
-          dimensions.width <= (c.width.max ?? Infinity) &&
-          dimensions.height >= (c.height.min ?? 0) &&
-          dimensions.height <= (c.height.max ?? Infinity))
+        (dimensions!.width >= (c.width?.min ?? 0) &&
+          dimensions!.width <= (c.width?.max ?? Infinity) &&
+          dimensions!.height >= (c.height?.min ?? 0) &&
+          dimensions!.height <= (c.height?.max ?? Infinity))
       );
     });
 

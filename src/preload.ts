@@ -12,8 +12,7 @@ contextBridge.exposeInMainWorld("internals", {
   cwd: () => ipcRenderer.invoke("cwd"),
   resolveSymlink: (path: string) => ipcRenderer.invoke("resolveSymlink", path),
   allowedExtensions: () => ipcRenderer.invoke("allowedExtensions"),
-  getFilename: (filepath: string) =>
-    ipcRenderer.invoke("getFilename", filepath),
+  getFilename: (filepath: string) => ipcRenderer.invoke("getFilename", filepath),
   askFiles: () => ipcRenderer.invoke("askFiles"),
   mergeAudio: (file: string) => ipcRenderer.invoke("mergeAudio", file),
   reduceSize: (

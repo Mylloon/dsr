@@ -24,11 +24,12 @@
     "@derhuerst/ffprobe-static": "^5.3"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^7.11",
-    "@electron-forge/maker-zip": "^7.11",
-    "electron": "^41.0",
-    "tsx": "^4.21",
-    "typescript": "^5.9"
+    "@electron-forge/cli": "^8.0.0-alpha.10",
+    "@electron-forge/maker-zip": "^8.0.0-alpha.10",
+    "@electron-forge/maker-rpm": "^8.0.0-alpha.10",
+    "electron": "^43.1",
+    "tsx": "^4.23",
+    "typescript": "^7.0"
   },
   "config": {
     "forge": {
@@ -45,8 +46,15 @@
             "win32",
             "linux"
           ]
+        },
+        {
+          "name": "@electron-forge/maker-rpm"
         }
       ]
     }
+  },
+  "allowScripts": {
+    "@derhuerst/ffprobe-static": true,
+    "ffmpeg-static": true
   }
 }

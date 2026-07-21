@@ -1,14 +1,9 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "downlevelIteration": true,
-    "noImplicitAny": true,
-    "sourceMap": true,
+    "module": "node20",
     "outDir": "dist",
-    "baseUrl": ".",
-    "paths": {
-      "*": ["node_modules/*"],
-    },
+    "rootDir": "./src",
   },
-  "include": ["src/**/*.ts"],
+  "include": ["./**/*.ts"],
+  "exclude": ["tests"],
 }

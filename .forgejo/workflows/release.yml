@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update &&
-          apt-get install -y zip rpm
+          apt-get install -y zip
 
       - name: Build the app for Windows
         run: |

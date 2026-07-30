@@ -144,7 +144,7 @@ export const findOptimalBackend = async (
     });
 
   for (const backend of backends) {
-    if (await testBackend(ffmpegPath, backend)) {
+    if (await testBackend(ffmpegPath, backend, codec)) {
       return backend;
     }
   }
@@ -156,11 +156,12 @@ export const findOptimalBackend = async (
 export const testBackend = async (
   ffmpegBinary: string,
   backend: FFmpegArgument.HardwareBackend,
+  codec: FFmpegArgument.Codecs.Video,
 ) => {
   const builder = new FFmpegBuilder(ffmpegBinary)
     .input(FFmpegArgument.File("testsrc", FFmpegArgument.Formats.Libavfilter))
     .output(FFmpegArgument.File("-", FFmpegArgument.Formats.NULL, 0.1))
-    .videoCodec(FFmpegArgument.Codecs.Video.H264);
+    .videoCodec(codec);
 
   switch (backend) {
     case FFmpegArgument.HardwareBackend.VAAPI:

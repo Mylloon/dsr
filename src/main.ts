@@ -189,7 +189,7 @@ app.whenReady().then(() => {
     }
 
     // User asked for a specific hardware backend
-    if (res.hw && !(await testBackend(ffmpegPath, res.hw))) {
+    if (res.hw && !(await testBackend(ffmpegPath, res.hw, res.vCodec))) {
       // CPU fallback
       // INFO: We could also reset to `undefined` to automatically research a suitable GPU backend
       res.hw = null;

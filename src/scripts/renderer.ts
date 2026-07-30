@@ -79,7 +79,7 @@ const main = async () => {
     updateMessage(fileSizeMessage);
 
     // Compress video if needed
-    if (newFile.size > args.fileLimit) {
+    if (args.forced || newFile.size > args.fileLimit) {
       const targetSize = args.fileLimit - 2; // keep some room
 
       updateMessage("\nSélection de l'encodeur...", true, Mode.Append);

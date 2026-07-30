@@ -39,6 +39,8 @@ You can add thoses flags in the `Target` field of your Windows shortcut.
 |                   |                                                         |
 | `/bitrateratio=1` | Change the ratio for the bitrate, defaults to 1         |
 | `/speed=1`        | Change the speed of the video, defaults to 1            |
+|                   |                                                         |
+| `/force`          | Force compression, regardless of the original file size |
 
 > `bitrateratio` option allows you to change the bitrate, if the file you want to compress
 > is either too small or too big.

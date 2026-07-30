@@ -34,6 +34,7 @@ type Args = {
   fileLimit: number;
   bitrateRatio: number;
   speed: number;
+  forced: boolean;
 };
 
 const parsePositiveNumber = (element: string, defaultOnError: number) => {
@@ -67,6 +68,9 @@ export const parseArgs = (argv: string[]) =>
         if (curr.startsWith("speed=")) {
           return { ...acc, speed: parsePositiveNumber(curr, acc.speed) };
         }
+        if (curr.startsWith("force")) {
+          return { ...acc, forced: true };
+        }
         return acc;
       },
       {
@@ -75,5 +79,6 @@ export const parseArgs = (argv: string[]) =>
         fileLimit: 10,
         bitrateRatio: 1,
         speed: 1,
+        forced: false,
       },
     );

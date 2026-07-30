@@ -46,6 +46,7 @@ declare global {
         fileLimit: number;
         bitrateRatio: number;
         speed: number;
+        forced: boolean;
       }>;
     };
   }

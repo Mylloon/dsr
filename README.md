@@ -32,7 +32,7 @@ You can add thoses flags in the `Target` field of your Windows shortcut.
 | `/qsv`            | Use your Intel (A\|G)PU with QSV API                    |
 | `/vulkan`         | Use your GPU with Vulkan API                            |
 |                   |                                                         |
-| `/h264`           | Enable the H.265 encoder (default)                      |
+| `/h264`           | Enable the H.264 encoder (default)                      |
 | `/h265`           | Enable the H.265 encoder                                |
 | `/av1`            | Enable the AV1 encoder                                  |
 | `/vp9`            | Enable the VP9 encoder                                  |

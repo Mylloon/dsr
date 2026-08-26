@@ -86,7 +86,7 @@ describe("FFmpeg builder", () => {
           .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
           .twopass(FFmpegArgument.SystemNULL.Windows)
           .toString(),
-        `"${binary}" -i "${input}" -c:v libx265 -b:v ${videoBitrate}k -x265-params pass=1 -an -f null NUL && "${binary}" -i "${input}" -c:v libx265 -b:v ${videoBitrate}k -x265-params pass=2 -c:a aac -map 0:v -map 0:a -f mp4 "${output}"`,
+        `"${binary}" -i "${input}" -c:v libx265 -b:v ${videoBitrate}k -x265-params pass=1 -an -f null NUL && "${binary}" -i "${input}" -c:v libx265 -b:v ${videoBitrate}k -x265-params pass=2 -c:a aac -map 0:v -map 0:a -tag:v hvc1 -f mp4 "${output}"`,
       );
     });
   }

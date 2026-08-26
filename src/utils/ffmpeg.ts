@@ -2,6 +2,7 @@ export namespace FFmpegArgument {
   /** Supported formats */
   export enum Formats {
     MP4 = "mp4",
+    Matroska = "matroska",
     Libavfilter = "lavfi",
     NULL = "null",
   }
@@ -880,6 +881,39 @@ export class FFmpegBuilder<HasInput extends boolean = false, HasOutput extends b
     // Streaming Flags
     if (FFmpegBuilder.changed(this._movFlags)) {
       args.push("-movflags", this._movFlags.join(","));
+    }
+
+    // Apple specific fix
+    // https://trac.ffmpeg.org/wiki/Encode/H.265#FinalCutandApplestuffcompatibility
+    switch (this._videoCodec) {
+      case FFmpegArgument.Codecs.Video.H265: {
+        const h265Apple = ["-tag:v", "hvc1"];
+        if (!pass && !this._hw_debug) {
+          // Output the user file into stdout and then remux the file with the correct H265 standard
+          const stdout = FFmpegArgument.File("-", FFmpegArgument.Formats.Matroska);
+          args.push(...stdout.options.getStringOptions(), `"${stdout.path}"`);
+
+          const conversion = new FFmpegBuilder(this.binaryPath)
+            .yes()
+            .input(FFmpegArgument.File("pipe:0"))
+            .videoCodec({
+              default: {
+                name: "copy " + h265Apple.join(" "),
+              },
+            })
+            .tracks(FFmpegArgument.Track.AllVideosMonoInput())
+            .audioCodec(FFmpegArgument.Codecs.Audio.Copy)
+            .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
+            .output(this._output);
+
+          args.push("|", conversion.toString());
+
+          return args.join(" ");
+        }
+        if (pass === 2) {
+          args.push(...h265Apple);
+        }
+      }
     }
 
     // Output File

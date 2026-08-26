@@ -392,7 +392,6 @@ app.whenReady().then(() => {
   };
 
   /* Context bridge */
-  ipcMain.handle("cwd", cwd);
   ipcMain.handle("resolveSymlink", (_, path: string) => symlinkResolver(path));
   ipcMain.handle("allowedExtensions", () => moviesFilter);
   ipcMain.handle("getFilename", (_, filepath: string) => getFilename(filepath));

@@ -367,6 +367,7 @@ app.whenReady().then(() => {
     const finalFile = getNewFilename(file, "Broadcastable - ");
 
     const builder = new FFmpegBuilder(ffmpegPath)
+      .yes()
       .input(FFmpegArgument.File(file))
       .output(FFmpegArgument.File(finalFile))
       .videoCodec(FFmpegArgument.Codecs.Video.Copy)

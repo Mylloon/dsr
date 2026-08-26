@@ -1,19 +1,12 @@
 /** Search for files */
-const getFiles = async () => {
+const getFiles = async (argv: string[]) => {
   const allowedExtensions = (await window.internals.allowedExtensions()).extensions;
-  const currentDir = await window.internals.cwd();
-  const argvFiles = (
-    await Promise.all(
-      (await window.internals.argv())
-        .slice(1)
-        .filter((file) => file !== ".")
-        .map(window.internals.resolveSymlink),
-    )
-  )
-    // Remove commands args
-    // Assumption: All input files should share the same "currentDirectory"
-    .filter((element) => element.startsWith(currentDir))
-    .map((element) => element.split("/").pop());
+  const argvFiles = await Promise.all(
+    argv
+      .slice(1)
+      .filter((file) => file !== ".")
+      .map(window.internals.resolveSymlink),
+  );
 
   if (argvFiles.length > 0) {
     const files = argvFiles;
@@ -62,9 +55,9 @@ const updateMessage = (message: string, load: boolean = false, mode: Mode = Mode
 
 /** Main function */
 const main = async () => {
-  const args = await window.internals.getArguments();
+  const { args, extra: unparsedArgs } = await window.internals.getArguments();
   updateMessage("Récupération des fichiers...");
-  const files = await getFiles();
+  const files = await getFiles(unparsedArgs);
   let processedFiles = "";
   let numberOfUncompressableFiles = 0;
 

@@ -181,7 +181,7 @@ app.whenReady().then(() => {
 
   /** Returns selected encoder and if we use hardware acceleration */
   const encoderInfo = async (isFile10bit: boolean, videoDimensions: Dimensions) => {
-    const res = parseArgs(process.argv);
+    const res = parseArgs(process.argv).args;
 
     // No hardware support
     if (isFile10bit) {

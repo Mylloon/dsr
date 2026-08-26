@@ -43,37 +43,41 @@ const parsePositiveNumber = (element: string, defaultOnError: number) => {
 };
 
 export const parseArgs = (argv: string[]) =>
-  argv
-    .flatMap((arg) => {
-      const prefix = ["/", "-"].find((p) => arg.startsWith(p));
-      return prefix ? [arg.slice(prefix.length)] : [];
-    })
-    .reduce<Args>(
-      (acc, curr) => {
-        if (curr in codecArgs) {
-          return { ...acc, vCodec: codecArgs[curr] };
-        }
-        if (curr in backendArgs) {
-          return { ...acc, hw: backendArgs[curr] };
-        }
-        if (curr in nitroArgs) {
-          return { ...acc, fileLimit: nitroArgs[curr] };
-        }
-        if (curr.startsWith("bitrateratio=")) {
-          return {
-            ...acc,
-            bitrateRatio: parsePositiveNumber(curr, acc.bitrateRatio),
-          };
-        }
-        if (curr.startsWith("speed=")) {
-          return { ...acc, speed: parsePositiveNumber(curr, acc.speed) };
-        }
-        if (curr.startsWith("force")) {
-          return { ...acc, forced: true };
-        }
-        return acc;
-      },
-      {
+  argv.reduce<{ args: Args; extra: string[] }>(
+    (acc, currRaw) => {
+      const prefix = ["/", "-"].find((p) => currRaw.startsWith(p));
+      const curr = prefix ? currRaw.slice(prefix.length) : currRaw;
+      if (curr in codecArgs) {
+        return { ...acc, args: { ...acc.args, vCodec: codecArgs[curr] } };
+      }
+      if (curr in backendArgs) {
+        return { ...acc, args: { ...acc.args, hw: backendArgs[curr] } };
+      }
+      if (curr in nitroArgs) {
+        return { ...acc, args: { ...acc.args, fileLimit: nitroArgs[curr] } };
+      }
+      if (curr.startsWith("bitrateratio=")) {
+        return {
+          ...acc,
+          args: {
+            ...acc.args,
+            bitrateRatio: parsePositiveNumber(curr, acc.args.bitrateRatio),
+          },
+        };
+      }
+      if (curr.startsWith("speed=")) {
+        return {
+          ...acc,
+          args: { ...acc.args, speed: parsePositiveNumber(curr, acc.args.speed) },
+        };
+      }
+      if (curr.startsWith("force")) {
+        return { ...acc, args: { ...acc.args, forced: true } };
+      }
+      return { ...acc, extra: [...acc.extra, currRaw] };
+    },
+    {
+      args: {
         vCodec: FFmpegArgument.Codecs.Video.H264,
         hw: undefined,
         fileLimit: 10,
@@ -81,4 +85,6 @@ export const parseArgs = (argv: string[]) =>
         speed: 1,
         forced: false,
       },
-    );
+      extra: [],
+    },
+  );

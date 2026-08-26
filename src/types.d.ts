@@ -43,10 +43,13 @@ declare global {
         hw: boolean;
       }>;
       getArguments: () => Promise<{
-        fileLimit: number;
-        bitrateRatio: number;
-        speed: number;
-        forced: boolean;
+        args: {
+          fileLimit: number;
+          bitrateRatio: number;
+          speed: number;
+          forced: boolean;
+        };
+        extra: string[];
       }>;
     };
   }

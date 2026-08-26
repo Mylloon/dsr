@@ -391,7 +391,6 @@ app.whenReady().then(() => {
   };
 
   /* Context bridge */
-  ipcMain.handle("argv", () => process.argv);
   ipcMain.handle("cwd", cwd);
   ipcMain.handle("resolveSymlink", (_, path: string) => symlinkResolver(path));
   ipcMain.handle("allowedExtensions", () => moviesFilter);

@@ -3,7 +3,6 @@ export {};
 declare global {
   interface Window {
     internals: {
-      argv: () => Promise<string[]>;
       cwd: () => Promise<string>;
       resolveSymlink: (text: string) => Promise<string>;
       allowedExtensions: () => Promise<{

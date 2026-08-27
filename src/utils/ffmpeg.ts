@@ -884,8 +884,8 @@ export class FFmpegBuilder<HasInput extends boolean = false, HasOutput extends b
     }
 
     // Apple specific fix
-    // https://trac.ffmpeg.org/wiki/Encode/H.265#FinalCutandApplestuffcompatibility
     switch (this._videoCodec) {
+      // https://trac.ffmpeg.org/wiki/Encode/H.265#FinalCutandApplestuffcompatibility
       case FFmpegArgument.Codecs.Video.H265: {
         const h265Apple = ["-tag:v", "hvc1"];
         if (!pass && !this._hw_debug) {
@@ -913,6 +913,10 @@ export class FFmpegBuilder<HasInput extends boolean = false, HasOutput extends b
         if (pass === 2) {
           args.push(...h265Apple);
         }
+      }
+      // https://developer.apple.com/documentation/http-live-streaming/hls-authoring-specification-for-apple-devices#Video
+      // Section 1.10 - should tag as avc1 - currently it's the default
+      case FFmpegArgument.Codecs.Video.H264: {
       }
     }
 

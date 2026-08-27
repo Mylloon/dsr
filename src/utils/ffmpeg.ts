@@ -903,7 +903,7 @@ export class FFmpegBuilder<HasInput extends boolean = false, HasOutput extends b
             })
             .tracks(FFmpegArgument.Track.AllVideosMonoInput())
             .audioCodec(FFmpegArgument.Codecs.Audio.Copy)
-            .tracks(FFmpegArgument.Track.AllAudiosMonoInput)
+            .tracks(FFmpegArgument.Track.AllAudiosMonoInput, false)
             .output(this._output);
 
           args.push("|", conversion.toString());

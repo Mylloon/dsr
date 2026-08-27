@@ -374,4 +374,16 @@ describe("FFmpeg builder", () => {
       );
     });
   }
+  {
+    it("H265 Apple specific's", () => {
+      assert.strictEqual(
+        new FFmpegBuilder(binary)
+          .input(FFmpegArgument.File(input))
+          .output(FFmpegArgument.File(output, FFmpegArgument.Formats.MP4))
+          .videoCodec(FFmpegArgument.Codecs.Video.H265)
+          .toString(),
+        `"${binary}" -i "${input}" -c:v libx265 -map 0:v -f matroska "-" | "${binary}" -y -i "pipe:0" -c:v copy -tag:v hvc1 -c:a copy -map 0:v -map 0:a? -f mp4 "${output}"`,
+      );
+    });
+  }
 });

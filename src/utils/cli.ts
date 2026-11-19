@@ -19,7 +19,7 @@ const backendArgs: Record<string, FFmpegArgument.HardwareBackend | null> = {
 };
 
 const nitroArgs: Record<string, number> = {
-  nitro: 500,
+  nitro: 1000,
   nitrobasic: 50,
 };
 
@@ -80,7 +80,7 @@ export const parseArgs = (argv: string[]) =>
       args: {
         vCodec: FFmpegArgument.Codecs.Video.H264,
         hw: undefined,
-        fileLimit: 10,
+        fileLimit: 20,
         bitrateRatio: 1,
         speed: 1,
         forced: false,

@@ -24,9 +24,9 @@
     "@derhuerst/ffprobe-static": "^5.3"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^8.0.0-alpha.10",
-    "@electron-forge/maker-zip": "^8.0.0-alpha.10",
-    "electron": "^44.0",
+    "@electron-forge/cli": "^8.0",
+    "@electron-forge/maker-zip": "^8.0",
+    "electron": "^45.4",
     "tsx": "^4.23",
     "typescript": "^7.0"
   },

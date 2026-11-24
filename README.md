@@ -23,8 +23,8 @@ You can add thoses flags in the `Target` field of your Windows shortcut.
 
 |                   |                                                         |
 | ----------------- | ------------------------------------------------------- |
-| `/nitro`          | Increase the file limit to 500Mo                        |
-| `/nitrobasic`     | Increase the file limit to 50Mo                         |
+| `/nitro`          | Increase the file limit to match Nitro limits           |
+| `/nitrobasic`     | Increase the file limit to match Nitro Basic limits     |
 |                   |                                                         |
 | `/cpu`            | Use your CPU                                            |
 | `/nvidia`         | Use your NVidia GPU with NVenc                          |
